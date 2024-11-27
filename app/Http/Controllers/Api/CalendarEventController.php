@@ -1,0 +1,338 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Resources\CalendarEventResource;
+use App\Models\CalendarEvent;
+use App\Models\CalendarResource;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+
+class CalendarEventController extends Controller
+{
+    public function index(Request $request)
+    {
+        $input = $request->validate([
+            'calendar_resource_type_id' => ['sometimes', 'integer'],
+            'facility_ids' => ['sometimes', 'array'],
+            'is_paid' => ['sometimes'],
+            'country_subdivision_id' => ['sometimes', 'integer'],
+        ]);
+
+        $user = Auth::user();
+
+        $calendarResourceId = data_get($input, 'calendar_resource_type_id');
+        $facilityIds = data_get($input, 'facility_ids', []);
+        $isPaid = data_get($input, 'is_paid');
+        $isPaidBoolean = $isPaid == 'true' ? true : false;
+        $countrySubdivisionId = data_get($input, 'country_subdivision_id');
+
+        $calendarEvents = CalendarEvent::query()
+            ->with(['resource.facility', 'user'])
+            ->when($isPaid, fn ($q) => $q->where('is_paid', $isPaidBoolean))
+            ->when(! empty($facilityIds), fn ($q) => $q->whereHas('resource.facility', fn ($query) => $query->whereIn('id', $facilityIds)))
+            ->when($countrySubdivisionId, fn ($q) => $q->whereHas('resource.facility', fn ($query) => $query->where('country_subdivision_id', $countrySubdivisionId)))
+            ->when($calendarResourceId, fn ($q) => $q->where('calendar_resource_id', $calendarResourceId))
+            ->where('tenant_id', $user->tenant_id)
+            ->get();
+
+        return CalendarEventResource::collection($calendarEvents);
+    }
+
+    public function store(Request $request)
+    {
+        $input = $request->validate([
+            'name' => ['required', 'string'],
+            'calendar_resource_id' => ['required', 'integer'],
+            'start_date' => ['required', 'string'],
+            'end_date' => ['required', 'string'],
+            'start_time' => ['required', 'string'],
+            'end_time' => ['required', 'string'],
+            'color' => ['required', 'string'],
+        ]);
+
+        $name = data_get($input, 'name');
+        $calendarResourceId = data_get($input, 'calendar_resource_id');
+        $startDate = data_get($input, 'start_date');
+        $endDate = data_get($input, 'end_date');
+        $startTime = data_get($input, 'start_time');
+        $endTime = data_get($input, 'end_time');
+        $color = data_get($input, 'color');
+
+        $user = Auth::user();
+
+        $startAt = Carbon::make($startDate)->setTimeFromTimeString($startTime);
+        $endAt = Carbon::make($endDate)->setTimeFromTimeString($endTime);
+
+        $calendarEvent = CalendarEvent::query()
+            ->create([
+                'name' => $name,
+                'tenant_id' => $user->tenant_id,
+                'user_id' => $user->id,
+                'calendar_resource_id' => $calendarResourceId,
+                'color' => $color,
+                'start_at' => $startAt,
+                'end_at' => $endAt,
+            ])
+            ->load('user');
+
+        return CalendarEventResource::make($calendarEvent);
+    }
+
+    public function update(Request $request, CalendarEvent $calendarEvent)
+    {
+        $input = $request->validate([
+            'name' => ['required', 'string'],
+            'calendar_resource_id' => ['required', 'integer'],
+            'start_date' => ['required', 'string'],
+            'end_date' => ['required', 'string'],
+            'start_time' => ['required', 'string'],
+            'end_time' => ['required', 'string'],
+            'color' => ['required', 'string'],
+        ]);
+
+        $name = data_get($input, 'name');
+        $calendarResourceId = data_get($input, 'calendar_resource_id');
+        $startDate = data_get($input, 'start_date');
+        $endDate = data_get($input, 'end_date');
+        $startTime = data_get($input, 'start_time');
+        $endTime = data_get($input, 'end_time');
+        $color = data_get($input, 'color');
+
+        $user = Auth::user();
+
+        $startAt = Carbon::make($startDate)->setTimeFromTimeString($startTime);
+        $endAt = Carbon::make($endDate)->setTimeFromTimeString($endTime);
+
+        $calendarEvent
+            ->update([
+                'name' => $name,
+                'tenant_id' => $user->tenant_id,
+                'user_id' => $user->id,
+                'calendar_resource_id' => $calendarResourceId,
+                'color' => $color,
+                'start_at' => $startAt,
+                'end_at' => $endAt,
+            ]);
+
+        $updatedEvent = CalendarEvent::query()
+            ->find($calendarEvent->id)
+            ->load('user');
+
+        return CalendarEventResource::make($updatedEvent);
+    }
+
+    public function storeBulk(Request $request)
+    {
+        $input = $request->validate([
+            'reservations' => ['required', 'array'],
+            'reservations.*.start_at' => ['required', 'string'],
+            'reservations.*.end_at' => ['required', 'string'],
+            'reservations.*.calendar_resource_id' => ['required', 'string'],
+            'name' => ['required', 'string'],
+            'color' => ['required', 'string'],
+        ]);
+
+        $reservations = data_get($input, 'reservations');
+        $name = data_get($input, 'name');
+        $color = data_get($input, 'color');
+
+        $user = Auth::user();
+
+        $dataToInsert = collect($reservations)->map(function ($reservation) use ($user, $name, $color) {
+            $startAt = Carbon::make($reservation['start_at']);
+            $endAt = Carbon::make($reservation['end_at']);
+
+            return [
+                'name' => $name,
+                'tenant_id' => $user->tenant_id,
+                'user_id' => $user->id,
+                'calendar_resource_id' => $reservation['calendar_resource_id'],
+                'start_at' => $startAt,
+                'end_at' => $endAt,
+                'color' => $color,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        });
+
+        CalendarEvent::query()->insert($dataToInsert->toArray());
+
+        return response()->json([], 201);
+    }
+
+    public function validateIntervals(Request $request)
+    {
+        $input = $request->validate([
+            'calendar_resource_id' => ['required', 'integer'],
+            'start_date' => ['required', 'string'],
+            'end_date' => ['required', 'string'],
+            'start_time' => ['required', 'string'],
+            'end_time' => ['required', 'string'],
+            'interval' => ['sometimes', 'integer'],
+            'pattern' => ['sometimes', 'string'],
+            'is_recurrent' => ['sometimes'],
+            'days_selected' => ['sometimes', 'array'],
+            'repeat_until' => ['sometimes', 'string'],
+            'repeat_until_date' => ['sometimes', 'string'],
+            'repeat_until_numeric' => ['sometimes', 'integer'],
+        ]);
+
+        $calendarResourceId = data_get($input, 'calendar_resource_id');
+        $startDate = data_get($input, 'start_date');
+        $endDate = data_get($input, 'end_date');
+        $startTime = data_get($input, 'start_time');
+        $endTime = data_get($input, 'end_time', null);
+        $interval = (int) data_get($input, 'interval');
+        $pattern = data_get($input, 'pattern');
+        $daysSelected = data_get($input, 'days_selected');
+        $repeatUntilDate = data_get($input, 'repeat_until_date');
+        $repeatUntilDate = $repeatUntilDate ? Carbon::parse($repeatUntilDate)->endOfDay() : null;
+        $repeatUntil = data_get($input, 'repeat_until');
+        $repeatUntilNumeric = data_get($input, 'repeat_until_numeric');
+        $isRecurrent = data_get($input, 'is_recurrent') == 'true' ? true : false;
+
+        $startAt = Carbon::make($startDate)->setTimeFromTimeString($startTime);
+        $endAt = Carbon::make($endDate)->setTimeFromTimeString($endTime);
+
+        $events = CalendarEvent::query()
+            //->where('start_at', '>=', $startDateStartOfDay)
+            //->where('end_at', '<=', $endDateEndOfDay)
+            ->where('calendar_resource_id', $calendarResourceId)
+            ->get();
+
+        $resource = CalendarResource::find($calendarResourceId);
+
+        $intervals = $isRecurrent
+            ? $this->generateRecurrentIntervals($startAt, $endAt, $interval, $pattern, $daysSelected, $repeatUntil == 'numeric' ? $repeatUntilNumeric : $repeatUntilDate)
+            : $this->generateNonRecurrentIntervals($startAt, $endAt, $interval);
+
+        $intervalsWithData = $intervals->map(function ($interval) use ($events, $resource) {
+            $startAt = Carbon::make($interval['start_at']);
+            $endAt = Carbon::make($interval['end_at']);
+
+            $conflicts = $events->filter(function ($event) use ($startAt, $endAt) {
+                $eventStart = Carbon::parse($event->start_at);
+                $eventEnd = Carbon::parse($event->end_at);
+
+                return
+                    ($startAt->greaterThanOrEqualTo($eventStart) && $endAt->lessThanOrEqualTo($eventEnd)) ||
+                    ($startAt->lessThanOrEqualTo($eventStart) && $endAt->greaterThanOrEqualTo($eventEnd)) ||
+                    ($startAt->lessThanOrEqualTo($eventStart) && $endAt->lessThanOrEqualTo($eventEnd) && $endAt->greaterThan($eventStart)) ||
+                    ($startAt->greaterThanOrEqualTo($eventStart) && $startAt->lessThan($eventEnd) && $endAt->greaterThanOrEqualTo($eventEnd));
+            });
+
+            return [
+                'start_at' => $startAt,
+                'end_at' => $endAt,
+                'has_conflict' => $conflicts->count() > 0,
+                'conflicts' => $conflicts,
+                'resource_id' => $resource->id,
+                'resource_name' => $resource->name,
+                'start_time' => $startAt->format('H:i'),
+                'end_time' => $endAt->format('H:i'),
+            ];
+        });
+
+        return response()->json([
+            'data' => $intervalsWithData,
+        ]);
+    }
+
+    private function generateNonRecurrentIntervals($startAt, $endAt, $interval = 0)
+    {
+        $dates = [];
+
+        $startCopy = $startAt->copy();
+        if ($interval !== 0) {
+            while ($startCopy->lt($endAt)) {
+                $dates[] = [
+                    'start_at' => $startCopy->format('Y-m-d H:i:s'),
+                    'end_at' => $startCopy->clone()->addMinutes($interval)->format('Y-m-d H:i:s'),
+                ];
+                $startCopy->addMinutes($interval);
+            }
+        } else {
+
+            $dates[] = [
+                'start_at' => $startAt->format('Y-m-d H:i:s'),
+                'end_at' => $endAt->format('Y-m-d H:i:s'),
+            ];
+        }
+
+        return collect($dates);
+    }
+
+    private function generateRecurrentIntervals($startAt, $endAt, $interval, $pattern, $days, $until, $offset = 1)
+    {
+        $dates = [];
+        $startAt = Carbon::parse($startAt);
+        $endAt = Carbon::parse($endAt);
+
+        if (is_numeric($until)) {
+            $maxReservations = (int) $until;
+        } else {
+            $until = Carbon::parse($until);
+            $maxReservations = null;
+        }
+
+        if ($pattern === 'by_weekly') {
+            $offset = 14;
+        } elseif ($pattern === 'monthly') {
+            $offset = 30;
+        }
+
+        if (in_array($pattern, ['by_weekly', 'daily'])) {
+            $days = [0, 1, 2, 3, 4, 5, 6];
+        }
+
+        if ($interval !== 0) {
+            $startInterval = $startAt->copy();
+            while ($startInterval->lt($endAt)) {
+                $dates[] = [
+                    'start_at' => $startInterval->format('Y-m-d H:i:s'),
+                    'end_at' => $startInterval->copy()->addMinutes($interval)->format('Y-m-d H:i:s'),
+                ];
+                $startInterval->addMinutes($interval);
+            }
+        } else {
+            $dates[] = [
+                'start_at' => $startAt->format('Y-m-d H:i:s'),
+                'end_at' => $endAt->format('Y-m-d H:i:s'),
+            ];
+        }
+
+        $currentDate = $startAt->copy()->addDay();
+        $finishDate = $endAt->copy()->addDay();
+
+        while ($maxReservations === null ? $currentDate->lte($until) : count($dates) < $maxReservations) {
+            if (in_array($currentDate->dayOfWeek, $days)) {
+                $startDate = $currentDate->copy()->setTime($startAt->hour, $startAt->minute, 0);
+                $endDate = $finishDate->copy()->setTime($endAt->hour, $endAt->minute, 0);
+
+                if ($interval !== 0) {
+                    $startInterval = $startDate->copy();
+                    while ($startInterval->lt($endDate)) {
+                        $dates[] = [
+                            'start_at' => $startInterval->format('Y-m-d H:i:s'),
+                            'end_at' => $startInterval->copy()->addMinutes($interval)->format('Y-m-d H:i:s'),
+                        ];
+                        $startInterval->addMinutes($interval);
+                    }
+                } else {
+                    $dates[] = [
+                        'start_at' => $startDate->format('Y-m-d H:i:s'),
+                        'end_at' => $endDate->format('Y-m-d H:i:s'),
+                    ];
+                }
+            }
+
+            $currentDate->addDays($offset);
+            $finishDate->addDays($offset);
+        }
+
+        return collect($dates);
+    }
+}
