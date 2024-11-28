@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $roleAdmin = Role::create(['name' => '-Calendar- Admin']);
-        $roleViewer = Role::create(['name' => '-Calendar- Viewer']);
-        $bookingManager = Role::create(['name' => '-Calendar- Booking Manager']);
+        $roleAdmin = Role::create(['name' => 'Admin', 'guard_name' => 'web']);
+        $roleViewer = Role::create(['name' => 'Viewer', 'guard_name' => 'web']);
+        $bookingManager = Role::create(['name' => 'Booking Manager', 'guard_name' => 'web']);
 
-        $permissionView = Permission::create(['name' => 'View Calendar']);
-        $permissionEdit = Permission::create(['name' => 'Edit Calendar']);
-        $permissionCreate = Permission::create(['name' => 'Create Reservation']);
-        $permissionDelete = Permission::create(['name' => 'Delete Reservation']);
-        $permissionCreateUsers = Permission::create(['name' => 'Create Users']);
-        $permissionCreateResources = Permission::create(['name' => 'Create Resources']);
+        $permissionView = Permission::create(['name' => 'View Calendar', 'guard_name' => 'web']);
+        $permissionEdit = Permission::create(['name' => 'Edit Calendar', 'guard_name' => 'web']);
+        $permissionCreate = Permission::create(['name' => 'Create Reservation', 'guard_name' => 'web']);
+        $permissionDelete = Permission::create(['name' => 'Delete Reservation', 'guard_name' => 'web']);
+        $permissionCreateUsers = Permission::create(['name' => 'Create Users', 'guard_name' => 'web']);
+        $permissionCreateResources = Permission::create(['name' => 'Create Resources', 'guard_name' => 'web']);
 
         $roleAdmin->syncPermissions([$permissionView, $permissionEdit, $permissionCreate, $permissionDelete, $permissionCreateUsers, $permissionCreateResources]);
         $roleViewer->syncPermissions([$permissionView]);

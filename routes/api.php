@@ -1,16 +1,17 @@
 <?php
 
-use App\Models\User;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\RoleController;
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\CountryController;
-use App\Http\Controllers\Api\FacilityController;
 use App\Http\Controllers\Api\CalendarEventController;
-use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\CalendarResourceController;
 use App\Http\Controllers\Api\CalendarResourceTypeController;
+use App\Http\Controllers\Api\CountryController;
+use App\Http\Controllers\Api\FacilityController;
+use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\UserController;
+use App\Models\User;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return response()->json(User::all());
@@ -29,7 +30,8 @@ Route::apiResource('users', UserController::class)
     ->except(['store']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
+    Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');
+    Route::resource('roles', RoleController::class);
     Route::post('calendar-resources/destroy-bulk', [CalendarResourceController::class, 'destroyBulk'])->name('calendar-resources.destroy-bulk');
     Route::resource('calendar-resources', CalendarResourceController::class);
     Route::get('calendar-resource-types', [CalendarResourceTypeController::class, 'index'])->name('calendar-resource-types.index');
