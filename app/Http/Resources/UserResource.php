@@ -21,20 +21,12 @@ class UserResource extends JsonResource
             'full_name' => $this->first_name.' '.$this->last_name,
             'email' => $this->email,
             'phone' => $this->phone,
-            'avatar_path' => $this->avatar_path,
-            'signed_waiver' => $this->signed_waiver,
-            'default_location' => $this->default_location,
-            'last_location' => $this->last_location,
-            'preferred_position' => $this->preferred_position,
             'remember_token' => $this->remember_token,
             'email_verified_at' => $this->email_verified_at,
             'tenant_id' => $this->tenant_id,
             'country' => new CountryResource($this->country),
             'roles' => $this->whenLoaded('roles'),
             'permissions' => $this->whenNotNull($this->permissions),
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'deleted_at' => $this->deleted_at,
         ];
     }
 }

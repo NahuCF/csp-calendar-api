@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();
             $table->uuid('tenant_id')->unique();
+            $table->bigInteger('created_by')->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();

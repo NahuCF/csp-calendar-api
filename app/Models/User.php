@@ -16,6 +16,8 @@ class User extends Authenticatable
 
     protected $guarded = [];
 
+    protected $with = ['roles'];
+
     public function country()
     {
         return $this->belongsTo(Country::class);
