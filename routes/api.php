@@ -10,12 +10,7 @@ use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
-use App\Models\User;
 use Illuminate\Support\Facades\Route;
-
-Route::get('/', function () {
-    return response()->json(User::all());
-});
 
 // Unprotected auth
 Route::post('auth/login', [AuthController::class, 'login']);
@@ -26,10 +21,8 @@ Route::post('password/code', [PasswordResetController::class, 'sendResetCode']);
 Route::post('password/verify', [PasswordResetController::class, 'verifyCode']);
 Route::post('password/reset', [PasswordResetController::class, 'reset']);
 
-Route::apiResource('users', UserController::class)
-    ->except(['store']);
-
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::apiResource('users', UserController::class);
     Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');
     Route::resource('roles', RoleController::class);
     Route::post('calendar-resources/destroy-bulk', [CalendarResourceController::class, 'destroyBulk'])->name('calendar-resources.destroy-bulk');
