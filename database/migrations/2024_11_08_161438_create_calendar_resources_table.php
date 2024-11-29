@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->foreignId('calendar_resource_type_id')->constrained();
             $table->foreignId('user_id')->constrained();
-            $table->foreignId('tenant_id');
+            $table->foreignUuid('tenant_id')->references('tenant_id')->on('users');
             $table->foreignId('facility_id')->constrained();
             $table->timestamps();
         });

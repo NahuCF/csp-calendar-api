@@ -5,6 +5,7 @@ namespace App\Services;
 use App\DataTransferObjects\AuthResult;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AuthService
 {
@@ -35,15 +36,14 @@ class AuthService
 
     public function register(object $data): AuthResult
     {
-        $tenantId = $data->tenant_id ?? User::max('tenant_id') + 1;
+        $tenantId = $data->tenant_id ?? (string) Str::uuid();
 
         $user = User::create([
             'email' => $data->email ?? null,
-            'phone' => $data->phone ?? null,
             'password' => Hash::make($data->password),
             'tenant_id' => $tenantId,
         ]);
-        $user->assignRole('-Calendar- Admin');
+        $user->assignRole('Admin');
         $user->permissions = $user->getAllPermissions()->pluck('name');
 
         $token = $this->createToken($user);
