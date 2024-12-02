@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
-use App\DataTransferObjects\AuthResult;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use App\Models\Tenant;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
+use App\DataTransferObjects\AuthResult;
 
 class AuthService
 {
@@ -37,6 +38,10 @@ class AuthService
     public function register(object $data): AuthResult
     {
         $tenantId = $data->tenant_id ?? (string) Str::uuid();
+
+        Tenant::query()->create([
+            'uuid'  => $tenantId  
+        ]);
 
         $user = User::create([
             'email' => $data->email ?? null,
