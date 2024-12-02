@@ -21,6 +21,7 @@ class CalendarResourceController extends Controller
         $search = data_get($input, 'search');
 
         $resources = CalendarResource::query()
+            ->withCount('events')
             ->with('user', 'facility', 'calendarResourceType')
             ->when($search, fn ($q) => $q->where('name', 'like', "%{$search}%"))
             ->where('tenant_id', $user->tenant_id)

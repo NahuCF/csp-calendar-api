@@ -21,6 +21,11 @@ class CalendarResource extends Model
         return $this->belongsTo(CalendarResourceType::class);
     }
 
+    public function events()
+    {
+        return $this->hasMany(CalendarEvent::class);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
