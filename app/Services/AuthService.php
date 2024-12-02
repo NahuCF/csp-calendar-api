@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\User;
-use App\Models\Tenant;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
 use App\DataTransferObjects\AuthResult;
+use App\Models\Tenant;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AuthService
 {
@@ -40,7 +40,7 @@ class AuthService
         $tenantId = $data->tenant_id ?? (string) Str::uuid();
 
         Tenant::query()->create([
-            'uuid'  => $tenantId  
+            'uuid' => $tenantId,
         ]);
 
         $user = User::create([

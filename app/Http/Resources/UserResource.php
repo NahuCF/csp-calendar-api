@@ -27,6 +27,7 @@ class UserResource extends JsonResource
             'country' => new CountryResource($this->country),
             'roles' => $this->whenLoaded('roles'),
             'permissions' => $this->whenNotNull($this->permissions),
+            'password_plain_text' => $this->whenNotNull($this->password_plain_text),
         ];
     }
 }

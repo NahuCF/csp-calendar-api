@@ -9,18 +9,39 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    public function index(Request $request)
+    {
+        $input = $request->validate([
+            'search' => ['sometimes'],
+        ]);
+
+        $user = Auth::user();
+        $search = data_get($input, 'search');
+
+        $users = User::query()
+            ->with('roles')
+            ->where('tenant_id', $user->tenant_id)
+            ->when($search, fn ($q) => $q->where('first_name', 'like', "%{$search}%")->orWhere('last_name', 'like', "%{$search}%"))
+            ->where('id', '!=', $user->id)
+            ->orderBy('id', 'asc')
+            ->paginate(15);
+
+        return UserResource::collection($users);
+    }
+
     public function store(Request $request)
     {
         $input = $request->validate([
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', 'string', 'min:8'],
+            'password' => ['required',  'string'],
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'role_ids' => ['required', 'array'],
-            'role_ids.*' => ['integer'],
+            'role_ids' => ['required'],
         ]);
 
         $email = data_get($input, 'email');
@@ -32,16 +53,29 @@ class UserController extends Controller
         $user = Auth::user();
 
         $newUser = User::create([
-            'email' => $email,
+            'email' => strtolower($email),
             'first_name' => $firstName,
             'last_name' => $lastName,
             'password' => Hash::make($password),
+            'password_plain_text' => $password,
             'tenant_id' => $user->tenant_id,
+            'created_by' => $user->id,
         ]);
 
-        $newUser->assignRole($roleIds);
+        $roles = Role::whereIn('id', $roleIds)->get();
+
+        $newUser->assignRole($roles->pluck('name'));
 
         return new UserResource($newUser);
+    }
+
+    public function emails()
+    {
+        $user = Auth::user();
+
+        return response()->json([
+            'data' => User::where('tenant_id', $user->tenant_id)->pluck('email'),
+        ]);
     }
 
     public function show(User $user): UserResource
@@ -49,15 +83,14 @@ class UserController extends Controller
         return new UserResource($user);
     }
 
-    public function update(Request $request, User $user): UserResource
+    public function update(Request $request, User $user)
     {
         $input = $request->validate([
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', 'string', 'min:8'],
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'password' => ['required',  'string'],
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'role_ids' => ['required', 'array'],
-            'role_ids.*' => ['integer'],
+            'role_ids' => ['required'],
         ]);
 
         $email = data_get($input, 'email');
@@ -66,6 +99,17 @@ class UserController extends Controller
         $lastName = data_get($input, 'last_name');
         $roleIds = data_get($input, 'role_ids');
 
+        $existUserWithSameEmail = User::query()
+            ->where('email', strtolower($email))
+            ->where('id', '!=', $user->id)
+            ->exists();
+
+        if ($existUserWithSameEmail) {
+            throw ValidationException::withMessages([
+                'email' => ['Email already on use.'],
+            ]);
+        }
+
         $user->update([
             'email' => $email,
             'first_name' => $firstName,
@@ -73,9 +117,24 @@ class UserController extends Controller
             'password' => Hash::make($password),
         ]);
 
-        $user->syncRoles($roleIds);
+        $roles = Role::whereIn('id', $roleIds)->get();
+
+        $user->syncRoles($roles->pluck('name'));
 
         return new UserResource($user);
+    }
+
+    public function destroyBulk(Request $request)
+    {
+        $input = $request->validate([
+            'user_ids' => ['required', 'array'],
+        ]);
+
+        $ids = data_get($input, 'user_ids');
+
+        User::whereIn('id', $ids)->delete();
+
+        return response()->noContent();
     }
 
     public function destroy(User $user): Response

@@ -103,4 +103,21 @@ class RoleController extends Controller
 
         return response()->noContent();
     }
+
+    public function destroyBulk(Request $request)
+    {
+        $input = $request->validate([
+            'role_ids' => ['required', 'array'],
+        ]);
+
+        $roleIds = data_get($input, 'role_ids');
+        $user = Auth::user();
+
+        Role::query()
+            ->whereIn('id', $roleIds)
+            ->where('tenant_id', $user->tenant_id)
+            ->delete();
+
+        return response()->noContent();
+    }
 }

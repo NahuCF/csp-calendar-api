@@ -22,8 +22,11 @@ Route::post('password/verify', [PasswordResetController::class, 'verifyCode']);
 Route::post('password/reset', [PasswordResetController::class, 'reset']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('users/destroy-bulk', [UserController::class, 'destroyBulk'])->name('users.destroy-bulk');
+    Route::get('users/emails', [UserController::class, 'emails'])->name('users.emails');
     Route::apiResource('users', UserController::class);
     Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');
+    Route::post('roles/destroy-bulk', [RoleController::class, 'destroyBulk'])->name('roles.destroy-bulk');
     Route::resource('roles', RoleController::class);
     Route::post('calendar-resources/destroy-bulk', [CalendarResourceController::class, 'destroyBulk'])->name('calendar-resources.destroy-bulk');
     Route::resource('calendar-resources', CalendarResourceController::class);
