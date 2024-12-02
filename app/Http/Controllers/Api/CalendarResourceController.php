@@ -24,6 +24,7 @@ class CalendarResourceController extends Controller
             ->with('user', 'facility', 'calendarResourceType')
             ->when($search, fn ($q) => $q->where('name', 'like', "%{$search}%"))
             ->where('tenant_id', $user->tenant_id)
+            ->orderBy('id', 'asc')
             ->paginate(15);
 
         return CalendarResourceResource::collection($resources);
