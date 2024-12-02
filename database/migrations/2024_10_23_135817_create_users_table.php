@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('email')->unique()->nullable();
             $table->string('password');
+            $table->string('password_plain_text')->nullable();
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();
-            $table->uuid('tenant_id')->unique();
+            $table->foreignUuid('tenant_id');
             $table->bigInteger('created_by')->nullable();
             $table->rememberToken();
             $table->timestamps();

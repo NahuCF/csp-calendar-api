@@ -9,7 +9,7 @@ class AddTenantIdToRolesTable extends Migration
     public function up()
     {
         Schema::table('roles', function (Blueprint $table) {
-            $table->foreignUuid('tenant_id')->nullable()->references('tenant_id')->on('users');
+            $table->foreignUuid('tenant_id')->nullable();
         });
     }
 

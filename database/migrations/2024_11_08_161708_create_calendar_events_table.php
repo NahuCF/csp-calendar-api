@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->foreignId('calendar_resource_id')->constrained();
             $table->bigInteger('user_id');
-            $table->foreignUuid('tenant_id')->references('tenant_id')->on('users');
+            $table->foreignUuid('tenant_id');
             $table->string('color');
             $table->boolean('is_paid')->default(0);
             $table->timestamp('start_at');

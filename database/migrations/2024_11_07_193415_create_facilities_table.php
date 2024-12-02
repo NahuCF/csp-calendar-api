@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->foreignId('country_subdivision_id')->constrained();
             $table->foreignId('country_id')->constrained();
-            $table->foreignUuid('tenant_id')->references('tenant_id')->on('users');
+            $table->foreignUuid('tenant_id');
             $table->timestamps();
         });
     }
