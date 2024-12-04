@@ -22,6 +22,7 @@ class FacilityResource extends JsonResource
             'country_subdivision_id' => $this->country_subdivision_id,
             'user' => UserResource::make($this->whenLoaded('user')),
             'resource_count' => $this->whenNotNull($this->resources_count),
+            'country' => CountryResource::make($this->whenLoaded('country')),
         ];
     }
 }

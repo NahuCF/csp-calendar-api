@@ -20,4 +20,9 @@ class Facility extends Model
     {
         return $this->hasMany(CalendarResource::class);
     }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
 }

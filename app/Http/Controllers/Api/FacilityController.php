@@ -28,7 +28,7 @@ class FacilityController extends Controller
         $user = Auth::user();
 
         $facilities = Facility::query()
-            ->with('user')
+            ->with('user', 'country')
             ->withCount('resources')
             ->where('tenant_id', $user->tenant_id)
             ->when($search, fn ($q) => $q->where('name', 'like', "%{$search}%"))
