@@ -69,6 +69,14 @@ class UserController extends Controller
         return new UserResource($newUser);
     }
 
+    public function me()
+    {
+        $user = Auth::user();
+        $user->permissions = $user->getAllPermissions()->pluck('name')->unique();
+
+        return new UserResource($user);
+    }
+
     public function emails()
     {
         $user = Auth::user();
