@@ -28,6 +28,7 @@ class UserResource extends JsonResource
             'roles' => $this->whenLoaded('roles'),
             'permissions' => $this->whenNotNull($this->permissions),
             'password_plain_text' => $this->whenNotNull($this->password_plain_text),
+            'api_token' => $this->whenNotNull($this->api_token),
         ];
     }
 }
