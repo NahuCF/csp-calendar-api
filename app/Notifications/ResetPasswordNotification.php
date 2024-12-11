@@ -30,7 +30,7 @@ class ResetPasswordNotification extends Notification implements ShouldQueue
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('CSP Password Reset Code')
+            ->subject('Password Reset Code')
             ->greeting('Hello!')
             ->line('You are receiving this email because we received a password reset request for your account.')
             ->line('Your password reset code is:')

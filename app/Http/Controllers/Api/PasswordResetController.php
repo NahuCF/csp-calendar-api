@@ -3,73 +3,62 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ResetRequest;
-use App\Http\Requests\SendResetCodeRequest;
-use App\Http\Requests\VerifyCodeRequest;
 use App\Models\PasswordReset;
 use App\Models\User;
 use App\Notifications\ResetPasswordNotification;
-use App\Notifications\ResetPasswordSMS;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class PasswordResetController extends Controller
 {
-    public function sendResetCode(SendResetCodeRequest $request)
+    public function sendResetCode(Request $request)
     {
-        try {
-            // Generate 6-digit code
-            $token = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $input = $request->validate([
+            'email' => ['required', 'string', 'email', 'max:255'],
+        ]);
 
-            // Delete any existing reset tokens for this user
-            PasswordReset::where('email', $request->email)
-                ->orWhere('phone', $request->phone)
-                ->delete();
+        $email = data_get($input, 'email');
 
-            // Create new reset token
-            PasswordReset::create([
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'token' => Hash::make($token), // Store hashed token
-                'created_at' => now(),
-                'attempts' => 0,
-            ]);
+        $token = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-            $user = User::when($request->has('email'), function ($query) use ($request) {
-                return $query->where('email', $request->email);
-            }, function ($query) use ($request) {
-                return $query->where('phone', $request->phone);
-            })->first();
+        PasswordReset::query()
+            ->where('email', $email)
+            ->delete();
 
-            $notification = $request->has('email')
-                ? new ResetPasswordNotification($token, $request->email)
-                : new ResetPasswordSMS($token, $request->phone);
+        PasswordReset::create([
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'token' => Hash::make($token),
+            'created_at' => now(),
+            'attempts' => 0,
+        ]);
 
-            $user->notify($notification);
+        $user = User::query()
+            ->where('email', $email)
+            ->first();
 
+        if (! $user) {
             return response()->json(['message' => 'Reset code sent successfully']);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to send reset code', [
-                'email' => $request->email ?? null,
-                'phone' => $request->phone ?? null,
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'message' => 'Unable to send reset code. Please try again later.',
-            ], 500);
         }
+
+        $user->notify(new ResetPasswordNotification($token, $request->email));
+
+        return response()->json(['message' => 'Reset code sent successfully']);
     }
 
-    public function verifyCode(VerifyCodeRequest $request)
+    public function verifyCode(Request $request)
     {
-        $reset = PasswordReset::where(function ($query) use ($request) {
-            $query->where('email', $request->email)
-                ->orWhere('phone', $request->phone);
-        })
+        $input = $request->validate([
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'token' => ['required', 'string'],
+        ]);
+
+        $email = data_get($input, 'email');
+
+        $reset = PasswordReset::query()
+            ->where('email', $email)
             ->where('created_at', '>', now()->subMinutes(15))
             ->first();
 
@@ -79,10 +68,8 @@ class PasswordResetController extends Controller
             ]);
         }
 
-        // Increment attempts
         $reset->increment('attempts');
 
-        // Check attempts (limit to 5)
         if ($reset->attempts > 5) {
             $reset->delete();
             throw ValidationException::withMessages([
@@ -90,14 +77,12 @@ class PasswordResetController extends Controller
             ]);
         }
 
-        // Verify token
         if (! Hash::check($request->token, $reset->token)) {
             throw ValidationException::withMessages([
                 'token' => ['Invalid reset code.'],
             ]);
         }
 
-        // Generate a temporary token for the password reset form
         $tempToken = Hash::make(Str::random(32));
         $reset->update(['token' => $tempToken]);
 
@@ -107,13 +92,21 @@ class PasswordResetController extends Controller
         ]);
     }
 
-    public function reset(ResetRequest $request)
+    public function reset(Request $request)
     {
-        $reset = PasswordReset::where(function ($query) use ($request) {
-            $query->where('email', $request->email)
-                ->orWhere('phone', $request->phone);
-        })
-            ->where('token', $request->token)
+        $input = $request->validate([
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'password' => ['required',  'string'],
+            'token' => ['required', 'string'],
+        ]);
+
+        $email = data_get($input, 'email');
+        $password = data_get($input, 'password');
+        $token = data_get($input, 'token');
+
+        $reset = PasswordReset::query()
+            ->where('email', $email)
+            ->where('token', $token)
             ->where('created_at', '>', now()->subMinutes(15))
             ->first();
 
@@ -123,12 +116,12 @@ class PasswordResetController extends Controller
             ]);
         }
 
-        $user = User::where('email', $request->email)
-            ->orWhere('phone', $request->phone)
+        $user = User::query()
+            ->where('email', $email)
             ->first();
 
         $user->update([
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($password),
         ]);
 
         $reset->delete();
