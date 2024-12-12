@@ -15,8 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->foreignId('user_id')->constrained();
-            $table->foreignId('country_subdivision_id')->constrained();
-            $table->foreignId('country_id')->constrained();
+            $table->foreignId('country_subdivision_id')->nullable()->constrained();
+            $table->foreignId('country_id')->nullable()->constrained();
+            $table->string('fallback_subterritory_name')->nullable();
+            $table->string('fallback_territory_name')->nullable();
+            $table->decimal('lat', 10, 7);
+            $table->decimal('lng', 10, 7);
             $table->foreignUuid('tenant_id');
             $table->timestamps();
         });

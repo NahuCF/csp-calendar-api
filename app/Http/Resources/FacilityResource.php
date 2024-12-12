@@ -23,6 +23,10 @@ class FacilityResource extends JsonResource
             'user' => UserResource::make($this->whenLoaded('user')),
             'resource_count' => $this->whenNotNull($this->resources_count),
             'country' => CountryResource::make($this->whenLoaded('country')),
+            'fallback_territory_name' => $this->fallback_territory_name,
+            'fallback_subterritory_name' => $this->fallback_subterritory_name,
+            'lat' => $this->lat,
+            'lng' => $this->lng,
         ];
     }
 }

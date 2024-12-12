@@ -9,6 +9,7 @@ use App\Models\CalendarResource;
 use App\Models\CalendarResourceType;
 use App\Models\CountrySubdivision;
 use App\Models\Facility;
+use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -66,25 +67,37 @@ class FacilityController extends Controller
     {
         $input = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'country_subdivision_id' => ['required', 'integer'],
+            'lat' => ['required', 'numeric'],
+            'lng' => ['required', 'numeric'],
         ]);
 
         $user = Auth::user();
 
         $name = data_get($input, 'name');
-        $countrySubdivisionId = data_get($input, 'country_subdivision_id');
+        $lat = data_get($input, 'lat');
+        $lng = data_get($input, 'lng');
 
-        $countryId = CountrySubdivision::query()
-            ->firstWhere('id', $countrySubdivisionId)
-            ->country_id;
+        $territory = $this->territoryData($lng, $lat);
+        $subTerritory = $territory ? $territory['subterritory'] : null;
+
+        $countrySubdivision = null;
+        if ($subTerritory) {
+            $countrySubdivision = CountrySubdivision::query()
+                ->where('name', 'like', "%{$subTerritory}%")
+                ->first();
+        }
 
         $facility = Facility::query()
             ->create([
                 'name' => $name,
                 'user_id' => $user->id,
                 'tenant_id' => $user->tenant_id,
-                'country_id' => $countryId,
-                'country_subdivision_id' => $countrySubdivisionId,
+                'country_id' => $countrySubdivision ? $countrySubdivision->country_id : null,
+                'country_subdivision_id' => $countrySubdivision ? $countrySubdivision->id : null,
+                'fallback_subterritory_name' => $countrySubdivision ? null : $subTerritory,
+                'fallback_territory_name' => $countrySubdivision ? null : $territory['territory'],
+                'lat' => $lat,
+                'lng' => $lng,
             ]);
 
         return FacilityResource::make($facility);
@@ -94,13 +107,17 @@ class FacilityController extends Controller
     {
         $input = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'country_subdivision_id' => ['required', 'integer'],
+            'lat' => ['required', 'numeric'],
+            'lng' => ['required', 'numeric'],
         ]);
 
         $user = Auth::user();
 
         $name = data_get($input, 'name');
-        $countrySubdivisionId = data_get($input, 'country_subdivision_id');
+        $lat = data_get($input, 'lat');
+        $lng = data_get($input, 'lng');
+
+        $user = Auth::user();
 
         if ($facility->tenant_id != $user->tenant_id) {
             throw ValidationException::withMessages([
@@ -108,9 +125,24 @@ class FacilityController extends Controller
             ]);
         }
 
+        $territory = $this->territoryData($lng, $lat);
+        $subTerritory = $territory ? $territory['subterritory'] : null;
+
+        $countrySubdivision = null;
+        if ($subTerritory) {
+            $countrySubdivision = CountrySubdivision::query()
+                ->where('name', 'like', "%{$subTerritory}%")
+                ->first();
+        }
+
         $facility->update([
             'name' => $name,
-            'country_subdivision_id' => $countrySubdivisionId,
+            'country_id' => $countrySubdivision ? $countrySubdivision->country_id : null,
+            'country_subdivision_id' => $countrySubdivision ? $countrySubdivision->id : null,
+            'fallback_subterritory_name' => $countrySubdivision ? null : $subTerritory,
+            'fallback_territory_name' => $countrySubdivision ? null : $territory['territory'],
+            'lat' => $lat,
+            'lng' => $lng,
         ]);
 
         return FacilityResource::make($facility);
@@ -155,5 +187,35 @@ class FacilityController extends Controller
             ->delete();
 
         return response()->noContent();
+    }
+
+    private function territoryData($lng, $lat)
+    {
+        $client = new Client;
+        $response = $client->get('https://nominatim.openstreetmap.org/reverse', [
+            'query' => [
+                'lat' => $lat,
+                'lon' => $lng,
+                'format' => 'json',
+                'addressdetails' => 1,
+            ],
+            'headers' => [
+                'User-Agent' => 'MyApp/1.0 (nahuefer173@gamil.com)',
+            ],
+        ]);
+
+        $data = json_decode($response->getBody(), true);
+
+        $state = isset($data['address']['state']) ? $data['address']['state'] : null;
+        $country = isset($data['address']['country']) ? $data['address']['country'] : null;
+
+        if ($state && $country) {
+            return [
+                'subterritory' => $state,
+                'territory' => $country,
+            ];
+        } else {
+            return false;
+        }
     }
 }
