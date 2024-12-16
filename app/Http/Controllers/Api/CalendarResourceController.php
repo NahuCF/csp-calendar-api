@@ -77,6 +77,8 @@ class CalendarResourceController extends Controller
                 'facility_id' => $facilityId,
             ]);
 
+        $resource->load('user', 'facility', 'calendarResourceType');
+
         return calendarresourceresource::make($resource);
     }
 
