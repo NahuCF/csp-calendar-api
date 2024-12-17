@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\FacilityController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\TimezoneController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Middleware\CheckPermission;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,8 @@ Route::post('auth/logout', [AuthController::class, 'logout']);
 Route::post('password/code', [PasswordResetController::class, 'sendResetCode']);
 Route::post('password/verify', [PasswordResetController::class, 'verifyCode']);
 Route::post('password/reset', [PasswordResetController::class, 'reset']);
+
+Route::get('/timezones', [TimezoneController::class, 'index']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('users/me', [UserController::class, 'me'])->name('users.me');

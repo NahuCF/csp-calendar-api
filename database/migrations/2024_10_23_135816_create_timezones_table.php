@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tenants', function (Blueprint $table) {
-            $table->uuid();
-            $table->foreignId('timezone_id')->constrained();
-            $table->timestamps();
+        Schema::create('timezones', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('deviation');
         });
     }
 
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tenants');
+        Schema::dropIfExists('timezones');
     }
 };
