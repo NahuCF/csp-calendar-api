@@ -168,15 +168,29 @@ class CalendarEventController extends Controller
             'reservations.*.calendar_resource_id' => ['required', 'string'],
             'name' => ['required', 'string'],
             'color' => ['required', 'string'],
+            'price' => ['sometimes', 'numeric'],
+            'discount_type' => ['sometimes', 'in:percentage,fixed'],
+            'discount' => ['sometimes', 'numeric'],
+            'discount_percentage' => ['sometimes', 'numeric', 'max:100'],
         ]);
 
         $reservations = data_get($input, 'reservations');
         $name = data_get($input, 'name');
         $color = data_get($input, 'color');
+        $price = data_get($input, 'price');
+        $discountType = data_get($input, 'discount_type');
+        $discount = data_get($input, 'discount');
+        $discountPercentage = data_get($input, 'discount_percentage');
+
+        if (($discountType == 'percentage' && ! $discountPercentage) || ($discountType == 'fixed' && ! $discount)) {
+            throw ValidationException::withMessages([
+                'discount' => 'Discount field is missing.',
+            ]);
+        }
 
         $user = Auth::user();
 
-        $dataToInsert = collect($reservations)->map(function ($reservation) use ($user, $name, $color) {
+        $dataToInsert = collect($reservations)->map(function ($reservation) use ($user, $name, $color, $price, $discount, $discountType, $discountPercentage) {
             $startAt = Carbon::make($reservation['start_at']);
             $endAt = Carbon::make($reservation['end_at']);
 
@@ -188,6 +202,9 @@ class CalendarEventController extends Controller
                 'start_at' => $startAt,
                 'end_at' => $endAt,
                 'color' => $color,
+                'price' => $price,
+                'discount' => $discountType == 'fixed' ? $discount : null,
+                'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
