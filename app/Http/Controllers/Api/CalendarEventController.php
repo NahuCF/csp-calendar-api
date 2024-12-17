@@ -9,6 +9,7 @@ use App\Models\CalendarResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class CalendarEventController extends Controller
 {
@@ -51,6 +52,10 @@ class CalendarEventController extends Controller
             'start_time' => ['required', 'string'],
             'end_time' => ['required', 'string'],
             'color' => ['required', 'string'],
+            'price' => ['sometimes', 'numeric'],
+            'discount_type' => ['sometimes', 'in:percentage,fixed'],
+            'discount' => ['sometimes', 'numeric'],
+            'discount_percentage' => ['sometimes', 'numeric', 'max:100'],
         ]);
 
         $name = data_get($input, 'name');
@@ -60,6 +65,16 @@ class CalendarEventController extends Controller
         $startTime = data_get($input, 'start_time');
         $endTime = data_get($input, 'end_time');
         $color = data_get($input, 'color');
+        $price = data_get($input, 'price');
+        $discountType = data_get($input, 'discount_type');
+        $discount = data_get($input, 'discount');
+        $discountPercentage = data_get($input, 'discount_percentage');
+
+        if (($discountType == 'percentage' && ! $discountPercentage) || ($discountType == 'fixed' && ! $discount)) {
+            throw ValidationException::withMessages([
+                'discount' => 'Discount field is missing.',
+            ]);
+        }
 
         $user = Auth::user();
 
@@ -74,6 +89,9 @@ class CalendarEventController extends Controller
                 'calendar_resource_id' => $calendarResourceId,
                 'color' => $color,
                 'start_at' => $startAt,
+                'price' => $price,
+                'discount' => $discountType == 'fixed' ? $discount : null,
+                'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
                 'end_at' => $endAt,
             ])
             ->load('user');
@@ -91,6 +109,10 @@ class CalendarEventController extends Controller
             'start_time' => ['required', 'string'],
             'end_time' => ['required', 'string'],
             'color' => ['required', 'string'],
+            'price' => ['sometimes', 'numeric'],
+            'discount_type' => ['sometimes', 'in:percentage,fixed'],
+            'discount' => ['sometimes', 'numeric'],
+            'discount_percentage' => ['sometimes', 'numeric', 'max:100'],
         ]);
 
         $name = data_get($input, 'name');
@@ -100,6 +122,16 @@ class CalendarEventController extends Controller
         $startTime = data_get($input, 'start_time');
         $endTime = data_get($input, 'end_time');
         $color = data_get($input, 'color');
+        $price = data_get($input, 'price');
+        $discountType = data_get($input, 'discount_type');
+        $discount = data_get($input, 'discount');
+        $discountPercentage = data_get($input, 'discount_percentage');
+
+        if (($discountType == 'percentage' && ! $discountPercentage) || ($discountType == 'fixed' && ! $discount)) {
+            throw ValidationException::withMessages([
+                'discount' => 'Discount field is missing.',
+            ]);
+        }
 
         $user = Auth::user();
 
@@ -115,6 +147,9 @@ class CalendarEventController extends Controller
                 'color' => $color,
                 'start_at' => $startAt,
                 'end_at' => $endAt,
+                'price' => $price,
+                'discount' => $discountType == 'fixed' ? $discount : null,
+                'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
             ]);
 
         $updatedEvent = CalendarEvent::query()

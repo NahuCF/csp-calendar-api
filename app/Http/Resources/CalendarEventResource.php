@@ -27,6 +27,21 @@ class CalendarEventResource extends JsonResource
             'is_paid' => (bool) $this->is_paid,
             'resource' => CalendarResourceResource::make($this->whenLoaded('resource')),
             'user' => UserResource::make($this->whenLoaded('user')),
+            'price' => $this->price,
+            'real_price' => $this->discount || $this->discount_percentage
+                ?
+                    ($this->discount
+                        ? number_format($this->price - $this->discount, 2)
+                        : number_format($this->price * (1 - $this->discount_percentage / 100), 2))
+                : $this->price,
+            'discount_type' => $this->discount || $this->discount_percentage
+                ?
+                    ($this->discount
+                        ? 'fixed'
+                        : 'percentage')
+                : null,
+            'discount' => $this->discount,
+            'discount_percentage' => $this->discount_percentage,
             'created_at' => $this->created_at,
         ];
     }

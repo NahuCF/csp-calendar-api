@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();
             $table->foreignUuid('tenant_id');
+            $table->string('timezone')->default('UTC');
             $table->bigInteger('created_by')->nullable();
             $table->rememberToken();
             $table->timestamps();
