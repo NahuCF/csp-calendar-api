@@ -94,11 +94,11 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $input = $request->validate([
-            'email' => ['required', 'string', 'email', 'max:255'],
-            'password' => ['required',  'string'],
+            'email' => ['sometimes', 'string', 'email', 'max:255'],
+            'password' => ['sometimes',  'string'],
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'role_ids' => ['required'],
+            'role_ids' => ['sometimes'],
         ]);
 
         $email = data_get($input, 'email');
@@ -118,16 +118,25 @@ class UserController extends Controller
             ]);
         }
 
-        $user->update([
-            'email' => $email,
+        $fields = [
             'first_name' => $firstName,
             'last_name' => $lastName,
-            'password' => Hash::make($password),
-        ]);
+        ];
 
-        $roles = Role::whereIn('id', $roleIds)->get();
+        if ($email) {
+            $fields['email'] = $email;
+        }
 
-        $user->syncRoles($roles->pluck('name'));
+        if ($password) {
+            $fields['password'] = Hash::make($password);
+        }
+
+        $user->update($fields);
+
+        if ($roleIds) {
+            $roles = Role::whereIn('id', $roleIds)->get();
+            $user->syncRoles($roles->pluck('name'));
+        }
 
         return new UserResource($user);
     }
