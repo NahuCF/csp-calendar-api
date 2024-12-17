@@ -47,12 +47,14 @@ class AuthController extends Controller
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required',  'string'],
+            'timezone_id' => ['required'],
         ]);
 
         $email = data_get($input, 'email');
         $password = data_get($input, 'password');
         $firstName = data_get($input, 'first_name');
         $lastName = data_get($input, 'last_name');
+        $timezoneId = data_get($input, 'timezone_id');
 
         if (User::query()->where('email', strtolower($email))->exists()) {
             throw ValidationException::withMessages([
@@ -64,6 +66,7 @@ class AuthController extends Controller
 
         Tenant::query()->create([
             'uuid' => $tenantId,
+            'timezone_id' => $timezoneId,
         ]);
 
         $user = User::create([

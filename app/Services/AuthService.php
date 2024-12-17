@@ -41,6 +41,7 @@ class AuthService
 
         Tenant::query()->create([
             'uuid' => $tenantId,
+            'timezone_id',
         ]);
 
         $user = User::create([
