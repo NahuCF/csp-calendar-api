@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('password_plain_text')->nullable();
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();
+            $table->string('avatar')->nullable();
+            $table->string('avatar_path')->nullable();
             $table->foreignUuid('tenant_id');
             $table->string('timezone')->default('UTC');
             $table->bigInteger('created_by')->nullable();

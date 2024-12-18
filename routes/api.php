@@ -33,7 +33,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('users', [UserController::class, 'index'])->name('users.index');
     Route::get('users/emails', [UserController::class, 'emails'])->name('users.emails');
     Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
-    Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::match(['post', 'put'], 'users/{user}', [UserController::class, 'update'])->name('users.update');
 
     Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');
     Route::post('roles/destroy-bulk', [RoleController::class, 'destroyBulk'])->name('roles.destroy-bulk');

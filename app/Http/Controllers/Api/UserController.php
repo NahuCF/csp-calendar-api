@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 
@@ -99,6 +100,7 @@ class UserController extends Controller
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'role_ids' => ['sometimes'],
+            'avatar' => ['sometimes', 'file', 'max:2048'],
         ]);
 
         $email = data_get($input, 'email');
@@ -106,6 +108,7 @@ class UserController extends Controller
         $firstName = data_get($input, 'first_name');
         $lastName = data_get($input, 'last_name');
         $roleIds = data_get($input, 'role_ids');
+        $avatar = $request->file('avatar');
 
         $existUserWithSameEmail = User::query()
             ->where('email', strtolower($email))
@@ -122,6 +125,18 @@ class UserController extends Controller
             'first_name' => $firstName,
             'last_name' => $lastName,
         ];
+
+        if ($avatar) {
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar_path)) {
+                Storage::disk('public')->delete($user->avatar_path);
+            }
+
+            $name = now()->timestamp.'-'.$avatar->getClientOriginalName();
+            $path = $avatar->storeAs('avatars', $name, 'public');
+
+            $fields['avatar'] = $name;
+            $fields['avatar_path'] = $path;
+        }
 
         if ($email) {
             $fields['email'] = $email;
