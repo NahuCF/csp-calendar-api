@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
 {
@@ -76,7 +77,11 @@ class AuthController extends Controller
             'tenant_id' => $tenantId,
             'password' => Hash::make($password),
         ]);
+
         $user->assignRole('Admin');
+        $role = Role::where('name', 'Admin')->first();
+        $user->syncPermissions($role->permissions);
+
         $user->permissions = $user->getAllPermissions()->pluck('name');
         $user->api_token = $user->createToken('api-token')->plainTextToken;
 
