@@ -56,6 +56,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('calendar-events', [CalendarEventController::class, 'store'])->name('calendar-events.store')->middleware(CheckPermission::class.':Create Reservation');
     Route::get('calendar-events/{calendar_event}/edit', [CalendarEventController::class, 'edit'])->name('calendar-events.edit')->middleware(CheckPermission::class.':Edit Calendar');
     Route::put('calendar-events/{calendar_event}', [CalendarEventController::class, 'update'])->name('calendar-events.update')->middleware(CheckPermission::class.':Edit Calendar');
+    Route::get('calendar-events/{calendar_event}/notes', [CalendarEventController::class, 'eventNotes'])->name('calendar-events.index-note');
+    Route::post('calendar-events/{calendar_event}/notes', [CalendarEventController::class, 'storeNote'])->name('calendar-events.store-note');
     Route::delete('calendar-events/{calendar_event}', [CalendarEventController::class, 'destroy'])->name('calendar-events.destroy')->middleware(CheckPermission::class.':Delete Reservation');
 
     Route::get('countries/with-events', [CountryController::class, 'countriesWithEvents']);
