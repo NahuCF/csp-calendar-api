@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CalendarEventResource;
+use App\Http\Resources\EventNoteResource;
 use App\Models\CalendarEvent;
 use App\Models\CalendarResource;
+use App\Models\EventNote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -56,6 +58,7 @@ class CalendarEventController extends Controller
             'discount_type' => ['sometimes', 'in:percentage,fixed'],
             'discount' => ['sometimes', 'numeric'],
             'discount_percentage' => ['sometimes', 'numeric', 'max:100'],
+            'note' => ['sometimes', 'string'],
         ]);
 
         $name = data_get($input, 'name');
@@ -69,6 +72,7 @@ class CalendarEventController extends Controller
         $discountType = data_get($input, 'discount_type');
         $discount = data_get($input, 'discount');
         $discountPercentage = data_get($input, 'discount_percentage');
+        $note = data_get($input, 'note');
 
         if (($discountType == 'percentage' && ! $discountPercentage) || ($discountType == 'fixed' && ! $discount)) {
             throw ValidationException::withMessages([
@@ -96,7 +100,41 @@ class CalendarEventController extends Controller
             ])
             ->load('user');
 
+        if ($note) {
+            EventNote::query()
+                ->create([
+                    'calendar_event_id' => $calendarEvent->id,
+                    'user_id' => $user->id,
+                    'note' => $note,
+                ]);
+        }
+
         return CalendarEventResource::make($calendarEvent);
+    }
+
+    public function eventNotes(CalendarEvent $calendarEvent)
+    {
+        return EventNoteResource::collection($calendarEvent->notes);
+    }
+
+    public function storeNote(Request $request, CalendarEvent $calendarEvent)
+    {
+        $input = $request->validate([
+            'note' => ['required', 'string'],
+        ]);
+
+        $note = data_get($input, 'note');
+
+        $note = EventNote::query()
+            ->create([
+                'calendar_event_id' => $calendarEvent->id,
+                'user_id' => Auth::user()->id,
+                'note' => $note,
+            ]);
+
+        $note->load('user');
+
+        return EventNoteResource::make($note);
     }
 
     public function update(Request $request, CalendarEvent $calendarEvent)
@@ -113,6 +151,7 @@ class CalendarEventController extends Controller
             'discount_type' => ['sometimes', 'in:percentage,fixed'],
             'discount' => ['sometimes', 'numeric'],
             'discount_percentage' => ['sometimes', 'numeric', 'max:100'],
+            'is_confirmed' => ['sometimes'],
         ]);
 
         $name = data_get($input, 'name');
@@ -126,6 +165,7 @@ class CalendarEventController extends Controller
         $discountType = data_get($input, 'discount_type');
         $discount = data_get($input, 'discount');
         $discountPercentage = data_get($input, 'discount_percentage');
+        $isConfirmed = data_get($input, 'is_confirmed') ? true : false;
 
         if (($discountType == 'percentage' && ! $discountPercentage) || ($discountType == 'fixed' && ! $discount)) {
             throw ValidationException::withMessages([
@@ -150,6 +190,7 @@ class CalendarEventController extends Controller
                 'price' => $price,
                 'discount' => $discountType == 'fixed' ? $discount : null,
                 'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
+                'is_confirmed' => $isConfirmed,
             ]);
 
         $updatedEvent = CalendarEvent::query()

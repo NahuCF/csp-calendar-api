@@ -11,6 +11,8 @@ class CalendarEvent extends Model
 
     protected $guarded = [];
 
+    protected $with = ['notes'];
+
     public function resource()
     {
         return $this->belongsTo(CalendarResource::class, 'calendar_resource_id', 'id');
@@ -19,5 +21,15 @@ class CalendarEvent extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function historyEvents()
+    {
+        return $this->hasMany(HistoryEvent::class);
+    }
+
+    public function notes()
+    {
+        return $this->hasMany(EventNote::class)->latest();
     }
 }

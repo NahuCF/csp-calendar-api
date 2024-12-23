@@ -42,6 +42,7 @@ class CalendarEventResource extends JsonResource
                 : null,
             'discount' => $this->discount,
             'discount_percentage' => $this->discount_percentage,
+            'notes' => EventNoteResource::collection($this->whenLoaded('notes')),
             'created_at' => $this->created_at,
         ];
     }
