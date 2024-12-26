@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('calendar_events', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->foreignId('client_id')->constrained();
             $table->foreignId('calendar_resource_id')->constrained();
             $table->bigInteger('user_id');
             $table->foreignUuid('tenant_id');
@@ -22,6 +23,7 @@ return new class extends Migration
             $table->decimal('price', 15, 2)->nullable()->default(null);
             $table->decimal('discount', 15, 2)->nullable()->default(null);
             $table->decimal('discount_percentage', 15, 2)->nullable()->default(null);
+            $table->boolean('is_confirmed')->default(false);
             $table->timestamp('start_at');
             $table->timestamp('end_at');
             $table->timestamps();

@@ -7,6 +7,7 @@ use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventNoteResource;
 use App\Models\CalendarEvent;
 use App\Models\CalendarResource;
+use App\Models\Client;
 use App\Models\EventNote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -58,7 +59,8 @@ class CalendarEventController extends Controller
             'discount_type' => ['sometimes', 'in:percentage,fixed'],
             'discount' => ['sometimes', 'numeric'],
             'discount_percentage' => ['sometimes', 'numeric', 'max:100'],
-            'note' => ['sometimes', 'string'],
+            'note' => ['sometimes'],
+            'client_id' => ['required', 'integer'],
         ]);
 
         $name = data_get($input, 'name');
@@ -73,6 +75,9 @@ class CalendarEventController extends Controller
         $discount = data_get($input, 'discount');
         $discountPercentage = data_get($input, 'discount_percentage');
         $note = data_get($input, 'note');
+        $clientId = data_get($input, 'client_id');
+
+        $user = Auth::user();
 
         if (($discountType == 'percentage' && ! $discountPercentage) || ($discountType == 'fixed' && ! $discount)) {
             throw ValidationException::withMessages([
@@ -80,7 +85,16 @@ class CalendarEventController extends Controller
             ]);
         }
 
-        $user = Auth::user();
+        $client = client::query()
+            ->where('id', $clientId)
+            ->where('tenant_id', $user->tenant_id)
+            ->exists();
+
+        if (! $client) {
+            throw validationexception::withmessages([
+                'client_id' => 'client not found.',
+            ]);
+        }
 
         $startAt = Carbon::make($startDate)->setTimeFromTimeString($startTime);
         $endAt = Carbon::make($endDate)->setTimeFromTimeString($endTime);
@@ -97,6 +111,7 @@ class CalendarEventController extends Controller
                 'discount' => $discountType == 'fixed' ? $discount : null,
                 'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
                 'end_at' => $endAt,
+                'client_id' => $clientId,
             ])
             ->load('user');
 
@@ -152,6 +167,7 @@ class CalendarEventController extends Controller
             'discount' => ['sometimes', 'numeric'],
             'discount_percentage' => ['sometimes', 'numeric', 'max:100'],
             'is_confirmed' => ['sometimes'],
+            'client_id' => ['required', 'integer'],
         ]);
 
         $name = data_get($input, 'name');
@@ -166,14 +182,26 @@ class CalendarEventController extends Controller
         $discount = data_get($input, 'discount');
         $discountPercentage = data_get($input, 'discount_percentage');
         $isConfirmed = data_get($input, 'is_confirmed') ? true : false;
+        $clientId = data_get($input, 'client_id');
+
+        $user = Auth::user();
+
+        $client = client::query()
+            ->where('id', $clientId)
+            ->where('tenant_id', $user->tenant_id)
+            ->exists();
+
+        if (! $client) {
+            throw validationexception::withmessages([
+                'client_id' => 'client not found.',
+            ]);
+        }
 
         if (($discountType == 'percentage' && ! $discountPercentage) || ($discountType == 'fixed' && ! $discount)) {
             throw ValidationException::withMessages([
                 'discount' => 'Discount field is missing.',
             ]);
         }
-
-        $user = Auth::user();
 
         $startAt = Carbon::make($startDate)->setTimeFromTimeString($startTime);
         $endAt = Carbon::make($endDate)->setTimeFromTimeString($endTime);
@@ -191,6 +219,7 @@ class CalendarEventController extends Controller
                 'discount' => $discountType == 'fixed' ? $discount : null,
                 'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
                 'is_confirmed' => $isConfirmed,
+                'client_id' => $clientId,
             ]);
 
         $updatedEvent = CalendarEvent::query()

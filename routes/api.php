@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CalendarEventController;
 use App\Http\Controllers\Api\CalendarResourceController;
 use App\Http\Controllers\Api\CalendarResourceTypeController;
+use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\CountryController;
 use App\Http\Controllers\Api\FacilityController;
 use App\Http\Controllers\Api\PasswordResetController;
@@ -59,6 +60,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('calendar-events/{calendar_event}/notes', [CalendarEventController::class, 'eventNotes'])->name('calendar-events.index-note');
     Route::post('calendar-events/{calendar_event}/notes', [CalendarEventController::class, 'storeNote'])->name('calendar-events.store-note');
     Route::delete('calendar-events/{calendar_event}', [CalendarEventController::class, 'destroy'])->name('calendar-events.destroy')->middleware(CheckPermission::class.':Delete Reservation');
+
+    Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
+    Route::post('clients', [ClientController::class, 'store'])->name('clients.store');
 
     Route::get('countries/with-events', [CountryController::class, 'countriesWithEvents']);
 });
