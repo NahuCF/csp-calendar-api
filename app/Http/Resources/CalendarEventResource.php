@@ -44,6 +44,9 @@ class CalendarEventResource extends JsonResource
             'discount' => $this->discount,
             'discount_percentage' => $this->discount_percentage,
             'notes' => EventNoteResource::collection($this->whenLoaded('notes')),
+            'will_assist' => $this->will_assist,
+            'client' => ClientResource::make($this->whenLoaded('client')),
+            'creation_date' => Carbon::parse($this->created_at)->format('d/m/Y h:i A'),
             'created_at' => $this->created_at,
         ];
     }

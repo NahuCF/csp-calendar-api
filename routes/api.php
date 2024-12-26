@@ -51,10 +51,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('facilities/destroy-bulk', [FacilityController::class, 'destroyBulk'])->name('facilities.destroy-bulk');
     Route::resource('facilities', FacilityController::class);
 
+    Route::get('calendar-events/client-history/{client}', [CalendarEventController::class, 'historyClient'])->name('calendar-events.history-client');
     Route::post('calendar-events/store-bulk', [CalendarEventController::class, 'storeBulk'])->name('calendar-events.store-bulk');
     Route::post('calendar-events/validate-intervals', [CalendarEventController::class, 'validateIntervals'])->name('calendar-events.validate-intervals');
     Route::get('calendar-events', [CalendarEventController::class, 'index'])->name('calendar-events.index')->middleware(CheckPermission::class.':View Calendar');
     Route::post('calendar-events', [CalendarEventController::class, 'store'])->name('calendar-events.store')->middleware(CheckPermission::class.':Create Reservation');
+    Route::put('calendar-events/update-assistance/{calendar_event}', [CalendarEventController::class, 'updateAssistance'])->name('calendar-events.update-asistance');
     Route::get('calendar-events/{calendar_event}/edit', [CalendarEventController::class, 'edit'])->name('calendar-events.edit')->middleware(CheckPermission::class.':Edit Calendar');
     Route::put('calendar-events/{calendar_event}', [CalendarEventController::class, 'update'])->name('calendar-events.update')->middleware(CheckPermission::class.':Edit Calendar');
     Route::get('calendar-events/{calendar_event}/notes', [CalendarEventController::class, 'eventNotes'])->name('calendar-events.index-note');

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->decimal('price', 15, 2)->nullable()->default(null);
             $table->decimal('discount', 15, 2)->nullable()->default(null);
             $table->decimal('discount_percentage', 15, 2)->nullable()->default(null);
-            $table->boolean('is_confirmed')->default(false);
+            $table->boolean('will_assist')->nullable()->default(null);
             $table->timestamp('start_at');
             $table->timestamp('end_at');
             $table->timestamps();

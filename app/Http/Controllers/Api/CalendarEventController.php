@@ -45,6 +45,33 @@ class CalendarEventController extends Controller
         return CalendarEventResource::collection($calendarEvents);
     }
 
+    public function historyClient(Request $request, Client $client)
+    {
+        $user = Auth::user();
+
+        $history =
+            CalendarEvent::query()
+                ->with('user')
+                ->where('client_id', $client->id)
+                ->where('tenant_id', $user->tenant_id)
+                ->orderBy('id', 'desc')
+                ->get();
+
+        return CalendarEventResource::collection($history);
+    }
+
+    public function updateAssistance(Request $request, CalendarEvent $calendarEvent)
+    {
+        $input = $request->validate([
+            'will_assist' => ['required'],
+        ]);
+
+        $calendarEvent->will_assist = (bool) data_get($input, 'will_assist');
+        $calendarEvent->save();
+
+        return CalendarEventResource::make($calendarEvent);
+    }
+
     public function store(Request $request)
     {
         $input = $request->validate([
@@ -166,7 +193,7 @@ class CalendarEventController extends Controller
             'discount_type' => ['sometimes', 'in:percentage,fixed'],
             'discount' => ['sometimes', 'numeric'],
             'discount_percentage' => ['sometimes', 'numeric', 'max:100'],
-            'is_confirmed' => ['sometimes'],
+            'will_assist' => ['sometimes'],
             'client_id' => ['required', 'integer'],
         ]);
 
@@ -181,7 +208,7 @@ class CalendarEventController extends Controller
         $discountType = data_get($input, 'discount_type');
         $discount = data_get($input, 'discount');
         $discountPercentage = data_get($input, 'discount_percentage');
-        $isConfirmed = data_get($input, 'is_confirmed') ? true : false;
+        $willAssit = data_get($input, 'will_assist', null);
         $clientId = data_get($input, 'client_id');
 
         $user = Auth::user();
@@ -218,7 +245,7 @@ class CalendarEventController extends Controller
                 'price' => $price,
                 'discount' => $discountType == 'fixed' ? $discount : null,
                 'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
-                'is_confirmed' => $isConfirmed,
+                'will_assist' => $willAssit,
                 'client_id' => $clientId,
             ]);
 
