@@ -21,6 +21,8 @@ class ClientResource extends JsonResource
             'prefix' => $this->prefix,
             'user' => UserResource::make($this->whenLoaded('user')),
             'user_id' => $this->user_id,
+            'full_cellphone' => $this->prefix.' '.$this->cellphone,
+            'events_count' => $this->whenNotNull($this->events_count),
         ];
     }
 }

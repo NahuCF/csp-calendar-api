@@ -139,8 +139,7 @@ class CalendarEventController extends Controller
                 'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
                 'end_at' => $endAt,
                 'client_id' => $clientId,
-            ])
-            ->load('user');
+            ]);
 
         if ($note) {
             EventNote::query()
@@ -150,6 +149,8 @@ class CalendarEventController extends Controller
                     'note' => $note,
                 ]);
         }
+
+        $calendarEvent->load('user', 'notes');
 
         return CalendarEventResource::make($calendarEvent);
     }

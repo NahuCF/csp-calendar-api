@@ -65,6 +65,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
     Route::post('clients', [ClientController::class, 'store'])->name('clients.store');
+    Route::post('clients/destroy-bulk', [ClientController::class, 'destroyBulk'])->name('clients.destroy-bulk');
+    Route::put('clients/{client}', [ClientController::class, 'update'])->name('clients.update');
+    Route::delete('clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
 
     Route::get('countries/with-events', [CountryController::class, 'countriesWithEvents']);
 });

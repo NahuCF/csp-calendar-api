@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignUuid('tenant_id');
             $table->foreignId('user_id')->constrained();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

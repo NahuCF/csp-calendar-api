@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->foreignId('calendar_event_id')->constrained();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
