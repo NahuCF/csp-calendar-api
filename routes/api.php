@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CalendarEventController;
 use App\Http\Controllers\Api\CalendarResourceController;
 use App\Http\Controllers\Api\CalendarResourceTypeController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\CountryController;
 use App\Http\Controllers\Api\FacilityController;
@@ -68,6 +69,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('clients/destroy-bulk', [ClientController::class, 'destroyBulk'])->name('clients.destroy-bulk');
     Route::put('clients/{client}', [ClientController::class, 'update'])->name('clients.update');
     Route::delete('clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
+
+    Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
+    Route::post('categories/destroy-bulk', [CategoryController::class, 'destroyBulk'])->name('categories.destroy-bulk');
+    Route::put('categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
     Route::get('countries/with-events', [CountryController::class, 'countriesWithEvents']);
 });

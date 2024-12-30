@@ -101,7 +101,7 @@ class ClientController extends Controller
 
         if ($client->tenant_id != $user->tenant_id) {
             throw ValidationException::withMessages([
-                'cannot_delete' => ['Cannot delete this facility'],
+                'cannot_delete' => ['Cannot delete this client'],
             ]);
         }
 
