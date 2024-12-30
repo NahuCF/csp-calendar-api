@@ -18,12 +18,12 @@ return new class extends Migration
             $table->foreignId('calendar_resource_id')->constrained();
             $table->bigInteger('user_id');
             $table->foreignUuid('tenant_id');
-            $table->string('color');
             $table->boolean('is_paid')->default(0);
             $table->decimal('price', 15, 2)->nullable()->default(null);
             $table->decimal('discount', 15, 2)->nullable()->default(null);
             $table->decimal('discount_percentage', 15, 2)->nullable()->default(null);
             $table->boolean('will_assist')->nullable()->default(null);
+            $table->foreignId('category_id')->constrained();
             $table->timestamp('start_at');
             $table->timestamp('end_at');
             $table->timestamps();
