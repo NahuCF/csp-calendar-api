@@ -81,7 +81,7 @@ class CalendarEventController extends Controller
             'end_date' => ['required', 'string'],
             'start_time' => ['required', 'string'],
             'end_time' => ['required', 'string'],
-            'color' => ['required', 'string'],
+            'category_id' => ['required'],
             'price' => ['sometimes', 'numeric'],
             'discount_type' => ['sometimes', 'in:percentage,fixed'],
             'discount' => ['sometimes', 'numeric'],
@@ -96,7 +96,7 @@ class CalendarEventController extends Controller
         $endDate = data_get($input, 'end_date');
         $startTime = data_get($input, 'start_time');
         $endTime = data_get($input, 'end_time');
-        $color = data_get($input, 'color');
+        $categoryId = data_get($input, 'category_id');
         $price = data_get($input, 'price');
         $discountType = data_get($input, 'discount_type');
         $discount = data_get($input, 'discount');
@@ -132,7 +132,7 @@ class CalendarEventController extends Controller
                 'tenant_id' => $user->tenant_id,
                 'user_id' => $user->id,
                 'calendar_resource_id' => $calendarResourceId,
-                'color' => $color,
+                'category_id' => $categoryId,
                 'start_at' => $startAt,
                 'price' => $price,
                 'discount' => $discountType == 'fixed' ? $discount : null,
@@ -189,7 +189,7 @@ class CalendarEventController extends Controller
             'end_date' => ['required', 'string'],
             'start_time' => ['required', 'string'],
             'end_time' => ['required', 'string'],
-            'color' => ['required', 'string'],
+            'category_id' => ['required'],
             'price' => ['sometimes', 'numeric'],
             'discount_type' => ['sometimes', 'in:percentage,fixed'],
             'discount' => ['sometimes', 'numeric'],
@@ -204,7 +204,7 @@ class CalendarEventController extends Controller
         $endDate = data_get($input, 'end_date');
         $startTime = data_get($input, 'start_time');
         $endTime = data_get($input, 'end_time');
-        $color = data_get($input, 'color');
+        $categoryId = data_get($input, 'category_id');
         $price = data_get($input, 'price');
         $discountType = data_get($input, 'discount_type');
         $discount = data_get($input, 'discount');
@@ -240,7 +240,7 @@ class CalendarEventController extends Controller
                 'tenant_id' => $user->tenant_id,
                 'user_id' => $user->id,
                 'calendar_resource_id' => $calendarResourceId,
-                'color' => $color,
+                'category_id' => $categoryId,
                 'start_at' => $startAt,
                 'end_at' => $endAt,
                 'price' => $price,
@@ -265,7 +265,7 @@ class CalendarEventController extends Controller
             'reservations.*.end_at' => ['required', 'string'],
             'reservations.*.calendar_resource_id' => ['required', 'string'],
             'name' => ['required', 'string'],
-            'color' => ['required', 'string'],
+            'category_id' => ['required'],
             'price' => ['sometimes', 'numeric'],
             'discount_type' => ['sometimes', 'in:percentage,fixed'],
             'discount' => ['sometimes', 'numeric'],
@@ -274,7 +274,7 @@ class CalendarEventController extends Controller
 
         $reservations = data_get($input, 'reservations');
         $name = data_get($input, 'name');
-        $color = data_get($input, 'color');
+        $categoryId = data_get($input, 'category_id');
         $price = data_get($input, 'price');
         $discountType = data_get($input, 'discount_type');
         $discount = data_get($input, 'discount');
@@ -288,7 +288,7 @@ class CalendarEventController extends Controller
 
         $user = Auth::user();
 
-        $dataToInsert = collect($reservations)->map(function ($reservation) use ($user, $name, $color, $price, $discount, $discountType, $discountPercentage) {
+        $dataToInsert = collect($reservations)->map(function ($reservation) use ($user, $name, $categoryId, $price, $discount, $discountType, $discountPercentage) {
             $startAt = Carbon::make($reservation['start_at']);
             $endAt = Carbon::make($reservation['end_at']);
 
@@ -299,7 +299,7 @@ class CalendarEventController extends Controller
                 'calendar_resource_id' => $reservation['calendar_resource_id'],
                 'start_at' => $startAt,
                 'end_at' => $endAt,
-                'color' => $color,
+                'category_id' => $categoryId,
                 'price' => $price,
                 'discount' => $discountType == 'fixed' ? $discount : null,
                 'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
