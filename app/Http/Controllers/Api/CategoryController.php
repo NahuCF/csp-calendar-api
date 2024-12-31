@@ -46,6 +46,10 @@ class CategoryController extends Controller
         $name = data_get($input, 'name');
         $color = data_get($input, 'color');
 
+        if ($color[0] !== '#') {
+            $color = '#'.$color;
+        }
+
         $client = Category::query()
             ->create([
                 'name' => $name,
@@ -70,6 +74,10 @@ class CategoryController extends Controller
 
         $name = data_get($input, 'name');
         $color = data_get($input, 'color');
+
+        if ($color[0] !== '#') {
+            $color = '#'.$color;
+        }
 
         if ($user->tenant_id !== $category->tenant_id) {
             throw ValidationException::withMessages([
