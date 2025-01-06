@@ -266,6 +266,7 @@ class CalendarEventController extends Controller
             'reservations.*.calendar_resource_id' => ['required', 'string'],
             'name' => ['required', 'string'],
             'category_id' => ['required'],
+            'client_id' => ['required'],
             'price' => ['sometimes', 'numeric'],
             'discount_type' => ['sometimes', 'in:percentage,fixed'],
             'discount' => ['sometimes', 'numeric'],
@@ -279,6 +280,7 @@ class CalendarEventController extends Controller
         $discountType = data_get($input, 'discount_type');
         $discount = data_get($input, 'discount');
         $discountPercentage = data_get($input, 'discount_percentage');
+        $clientId = data_get($input, 'client_id');
 
         if (($discountType == 'percentage' && ! $discountPercentage) || ($discountType == 'fixed' && ! $discount)) {
             throw ValidationException::withMessages([
@@ -288,7 +290,7 @@ class CalendarEventController extends Controller
 
         $user = Auth::user();
 
-        $dataToInsert = collect($reservations)->map(function ($reservation) use ($user, $name, $categoryId, $price, $discount, $discountType, $discountPercentage) {
+        $dataToInsert = collect($reservations)->map(function ($reservation) use ($user, $name, $clientId, $categoryId, $price, $discount, $discountType, $discountPercentage) {
             $startAt = Carbon::make($reservation['start_at']);
             $endAt = Carbon::make($reservation['end_at']);
 
@@ -300,6 +302,7 @@ class CalendarEventController extends Controller
                 'start_at' => $startAt,
                 'end_at' => $endAt,
                 'category_id' => $categoryId,
+                'client_id' => $clientId,
                 'price' => $price,
                 'discount' => $discountType == 'fixed' ? $discount : null,
                 'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
