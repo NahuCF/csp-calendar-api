@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Middleware\CheckPermission;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/', fn () => dd('working...'));
+
 // Unprotected auth
 Route::post('auth/login', [AuthController::class, 'login']);
 Route::post('auth/register', [AuthController::class, 'register']);
