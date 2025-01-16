@@ -10,7 +10,9 @@ use App\Http\Controllers\Api\CountryController;
 use App\Http\Controllers\Api\FacilityController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\RequestBookingController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SportController;
 use App\Http\Controllers\Api\TimezoneController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Middleware\CheckPermission;
@@ -79,6 +81,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
     Route::get('countries/with-events', [CountryController::class, 'countriesWithEvents']);
+
+    Route::get('request-bookings', [RequestBookingController::class, 'index'])->name('request-booking.index');
 });
 
 Route::resource('countries', CountryController::class);
+Route::get('sports', [SportController::class, 'index'])->name('sports.index');
