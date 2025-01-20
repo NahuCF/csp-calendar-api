@@ -10,6 +10,7 @@ class Facility extends Model
     use HasFactory;
 
     protected $guarded = [];
+    protected $with = ['resources'];
 
     public function user()
     {
@@ -18,7 +19,7 @@ class Facility extends Model
 
     public function resources()
     {
-        return $this->hasMany(CalendarResource::class);
+        return $this->hasMany(CalendarResource::class)->without('facility');
     }
 
     public function country()
