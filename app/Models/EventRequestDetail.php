@@ -13,7 +13,7 @@ class EventRequestDetail extends Model
 
     protected $with = ['resource'];
 
-    public function resource() 
+    public function resource()
     {
         return $this->belongsTo(CalendarResource::class, 'calendar_resource_id');
     }
