@@ -16,8 +16,12 @@ return new class extends Migration
             $table->bigInteger('request_id');
             $table->foreignUuid('tenant_id');
             $table->foreignId('user_id')->constrained();
+            $table->string('notes')->nullable();
+            $table->foreignId('sport_id')->constrained();
+            $table->foreignId('calendar_resource_id')->constrained();
             $table->decimal('price', 15, 2);
             $table->boolean('confirmed')->default(false);
+            $table->boolean('is_paid')->default(false);
             $table->timestamps();
         });
     }
