@@ -13,6 +13,11 @@ class EventRequest extends Model
 
     public function details()
     {
-        return $this->hasMany(EventRequestDetail::class);
+        return $this->hasMany(EventRequestDetail::class)->orderBy('id', 'desc');
+    }
+
+    public function sport()
+    {
+        return $this->belongsTo(Sport::class);
     }
 }
