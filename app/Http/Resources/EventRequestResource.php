@@ -20,6 +20,8 @@ class EventRequestResource extends JsonResource
             'price' => $this->price,
             'confirmed' => $this->confirmed,
             'details' => EventRequestDetailResource::collection($this->whenLoaded('details')),
+            'sport' => SportResource::make($this->whenLoaded('sport')),
+            'is_paid' => $this->is_paid,
         ];
     }
 }

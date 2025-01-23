@@ -25,6 +25,8 @@ class FacilityResource extends JsonResource
             'country' => CountryResource::make($this->whenLoaded('country')),
             'fallback_territory_name' => $this->fallback_territory_name,
             'fallback_subterritory_name' => $this->fallback_subterritory_name,
+            'resources' => CalendarResourceResource::collection($this->whenLoaded('resources')),
+            'currency_code' => $this->currency_code,
             'lat' => $this->lat,
             'lng' => $this->lng,
         ];
