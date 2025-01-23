@@ -10,6 +10,7 @@ class Facility extends Model
     use HasFactory;
 
     protected $guarded = [];
+
     protected $with = ['resources'];
 
     public function user()
