@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sports', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->timestamps();
+        Schema::table('facilities', function (Blueprint $table) {
+            $table->string('currency_code')->default('CAD');
         });
     }
 
@@ -23,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sports');
+        Schema::table('facilities', function (Blueprint $table) {
+            $table->dropColumn('currency_code');
+        });
     }
 };
