@@ -16,19 +16,22 @@ class CalendarResourceController extends Controller
     {
         $input = $request->validate([
             'search' => ['sometimes'],
+            'paginated' => ['sometimes'],
         ]);
 
         $user = Auth::user();
 
         $search = data_get($input, 'search');
+        $paginated = data_get($input, 'paginated', false);
 
         $resources = CalendarResource::query()
             ->withCount('events')
             ->with('user', 'facility', 'calendarResourceType')
             ->when($search, fn ($q) => $q->where('name', 'like', "%{$search}%"))
             ->where('tenant_id', $user->tenant_id)
-            ->orderBy('id', 'asc')
-            ->paginate(15);
+            ->orderBy('id', 'asc');
+
+        $resources = $paginated ? $resources->paginate(15) : $resources->get();
 
         return CalendarResourceResource::collection($resources);
     }
