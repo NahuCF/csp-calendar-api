@@ -21,10 +21,12 @@ class FacilityController extends Controller
         $input = $request->validate([
             'paginated' => ['sometimes'],
             'search' => ['sometimes'],
+            'only_with_resources' => ['sometimes'],
         ]);
 
         $paginated = data_get($input, 'paginated', false);
         $search = data_get($input, 'search');
+        $onlyWithResources = data_get($input, 'only_with_resources', false);
 
         $user = Auth::user();
 
@@ -33,6 +35,7 @@ class FacilityController extends Controller
             ->withCount('resources')
             ->where('tenant_id', $user->tenant_id)
             ->when($search, fn ($q) => $q->where('name', 'like', "%{$search}%"))
+            ->when($onlyWithResources, fn ($q) => $q->has('resources'))
             ->orderBy('id', 'asc');
 
         $facilities = $paginated ? $facilities->paginate(15) : $facilities->get();
@@ -69,6 +72,7 @@ class FacilityController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'lat' => ['required', 'numeric'],
             'lng' => ['required', 'numeric'],
+            'currency_code' => ['required', 'string', 'max:255'],
         ]);
 
         $user = Auth::user();
@@ -76,6 +80,7 @@ class FacilityController extends Controller
         $name = data_get($input, 'name');
         $lat = data_get($input, 'lat');
         $lng = data_get($input, 'lng');
+        $currencyCode = data_get($input, 'currency_code');
 
         $territory = $this->territoryData($lng, $lat);
         $subTerritory = $territory ? $territory['subterritory'] : null;
@@ -96,6 +101,7 @@ class FacilityController extends Controller
                 'country_subdivision_id' => $countrySubdivision ? $countrySubdivision->id : null,
                 'fallback_subterritory_name' => $countrySubdivision ? null : $subTerritory,
                 'fallback_territory_name' => $countrySubdivision ? null : $territory['territory'],
+                'currency_code' => $currencyCode,
                 'lat' => $lat,
                 'lng' => $lng,
             ]);
@@ -109,6 +115,7 @@ class FacilityController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'lat' => ['required', 'numeric'],
             'lng' => ['required', 'numeric'],
+            'currency_code' => ['required', 'string', 'max:255'],
         ]);
 
         $user = Auth::user();
@@ -116,6 +123,7 @@ class FacilityController extends Controller
         $name = data_get($input, 'name');
         $lat = data_get($input, 'lat');
         $lng = data_get($input, 'lng');
+        $currencyCode = data_get($input, 'currency_code');
 
         $user = Auth::user();
 
@@ -141,6 +149,7 @@ class FacilityController extends Controller
             'country_subdivision_id' => $countrySubdivision ? $countrySubdivision->id : null,
             'fallback_subterritory_name' => $countrySubdivision ? null : $subTerritory,
             'fallback_territory_name' => $countrySubdivision ? null : $territory['territory'],
+            'currency_code' => $currencyCode,
             'lat' => $lat,
             'lng' => $lng,
         ]);
