@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\RequestBookingController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SportController;
+use App\Http\Controllers\Api\StripeController;
 use App\Http\Controllers\Api\TimezoneController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Middleware\CheckPermission;
@@ -83,6 +84,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('countries/with-events', [CountryController::class, 'countriesWithEvents']);
 
     Route::get('request-bookings', [RequestBookingController::class, 'index'])->name('request-booking.index');
+    Route::put('request-bookings/update-detail/{detail}', [RequestBookingController::class, 'updateDetail'])->name('request-booking.update-detail');
+    Route::post('request-bookings/{eventRequest}/confirm', [RequestBookingController::class, 'confirmRequest'])->name('request-booking.confirm-request');
+
+    Route::get('/stripe/intent/create', [StripeController::class, 'createIntent']);
+    Route::post('/stripe/intent/confirm', [StripeController::class, 'confirmIntent']);
 });
 
 Route::resource('countries', CountryController::class);
