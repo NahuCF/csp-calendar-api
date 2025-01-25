@@ -29,7 +29,7 @@ class RequestBookingController extends Controller
         }
 
         $eventRequest = EventRequest::query()
-            ->with('details.resource.facility', 'sport')
+            ->with('details.resource.facility', 'sport', 'facility')
             ->where('tenant_id', $user->tenant_id)
             ->when($clientId, fn ($q) => $q->where('user_id', $client->user_id))
             ->orderBy('id', 'desc')

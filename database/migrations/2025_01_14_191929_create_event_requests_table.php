@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('notes')->nullable();
             $table->foreignId('sport_id')->constrained();
             $table->foreignId('calendar_resource_id')->constrained();
+            $table->foreignId('facility_id')->constrained();
             $table->decimal('price', 15, 2);
             $table->boolean('confirmed')->default(false);
             $table->boolean('is_paid')->default(false);

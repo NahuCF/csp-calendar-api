@@ -21,7 +21,7 @@ class RequestBookingController extends Controller
         $user = Auth::user();
 
         $eventRequest = EventRequest::query()
-            ->with('details.resource.facility', 'sport')
+            ->with('details.resource.facility', 'sport', 'facility')
             ->where('user_id', $user->id)
             ->orderBy('id', 'desc')
             ->paginate(15);
@@ -40,6 +40,7 @@ class RequestBookingController extends Controller
             'identifier' => ['required'],
             'notes' => ['sometimes'],
             'resource_id' => ['required'],
+            'facility_id' => ['required'],
             'sport_id' => ['required'],
         ]);
 
@@ -48,6 +49,7 @@ class RequestBookingController extends Controller
         $notes = data_get($input, 'notes', '');
         $sportId = data_get($input, 'sport_id');
         $resourceId = data_get($input, 'resource_id');
+        $facilityId = data_get($input, 'facility_id');
 
         $tenant = Tenant::query()
             ->where('identifier', $identifier)
@@ -73,6 +75,7 @@ class RequestBookingController extends Controller
                 'notes' => $notes,
                 'sport_id' => $sportId,
                 'calendar_resource_id' => $resourceId,
+                'facility_id' => $facilityId,
                 'request_id' => EventRequest::query()
                     ->where('tenant_id', $tenant->id)
                     ->select('request_id')

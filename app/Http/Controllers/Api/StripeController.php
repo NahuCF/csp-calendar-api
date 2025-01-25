@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\CalendarEvent;
+use Stripe\Stripe;
 use App\Models\Client;
 use App\Models\EventRequest;
+use Illuminate\Http\Request;
+use App\Models\CalendarEvent;
+use App\Models\CalendarResource;
 use App\Models\EventRequestDetail;
 use App\Models\StripeIntentRequest;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Stripe\Stripe;
 
 class StripeController extends Controller
 {
@@ -31,9 +32,11 @@ class StripeController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
+        $resource = CalendarResource::find($eventRequest->calendar_resource_id);
+
         $paymentIntent = \Stripe\PaymentIntent::create([
             'amount' => $eventRequest->price * 100,  // In cents
-            'currency' => 'usd',
+            'currency' => strtolower($resource->facility->currency_code),
             'automatic_payment_methods' => ['enabled' => true],
         ]);
 
@@ -50,6 +53,7 @@ class StripeController extends Controller
             'intent' => $paymentIntent,
             'clientSecret' => $paymentIntent->client_secret,
             'request' => $eventRequest,
+            'currency_code' => $resource->facility->currency_code
         ]);
     }
 
