@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Http\Resources\CalendarEventResource;
-use App\Http\Resources\EventNoteResource;
-use App\Models\CalendarEvent;
-use App\Models\CalendarResource;
 use App\Models\Client;
 use App\Models\EventNote;
+use App\Models\EventRequest;
 use Illuminate\Http\Request;
+use App\Models\CalendarEvent;
 use Illuminate\Support\Carbon;
+use App\Models\CalendarResource;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\EventNoteResource;
+use App\Http\Resources\CalendarEventResource;
 use Illuminate\Validation\ValidationException;
 
 class CalendarEventController extends Controller
@@ -180,6 +181,48 @@ class CalendarEventController extends Controller
         return EventNoteResource::make($note);
     }
 
+    public function updateEventRequest(Request $request, CalendarEvent $calendarEvent)
+    {
+        $input = $request->validate([
+            'calendar_resource_id' => ['required'],
+            'start_time' => ['required'],
+            'end_time' => ['required'],
+            'price' => ['required'],
+            'start_at_date' => ['required'],
+        ]);
+
+        $calendarResourceId = data_get($input, 'calendar_resource_id');
+        $startTime = data_get($input, 'start_time');
+        $endTime = data_get($input, 'end_time');
+        $price = data_get($input, 'price');
+        $startAtDate = data_get($input, 'start_at_date');
+
+        $calendarEvent->update([
+            'calendar_resource_id' => $calendarResourceId,
+            'start_at' => Carbon::parse($startAtDate.' '.$startTime)->format('Y-m-d H:i:s'),
+            'end_at' => Carbon::parse($startAtDate.' '.$endTime)->format('Y-m-d H:i:s'),
+            'price' => $price,
+        ]);
+
+        $details = CalendarEvent::query()
+            ->where('event_request_id', $calendarEvent->event_request_id)
+            ->get();
+
+        EventRequest::query()
+            ->where('id', $calendarEvent->event_request_id)
+            ->update([
+                'price' => $details->sum('price'),
+            ]);
+
+        CalendarEvent::query()
+            ->where('id', $calendarEvent->event_request_id)
+            ->update([
+                'price' => $details->sum('price'),
+            ]);
+
+        return CalendarEventResource::make($calendarEvent);
+    }
+
     public function update(Request $request, CalendarEvent $calendarEvent)
     {
         $input = $request->validate([
@@ -249,6 +292,18 @@ class CalendarEventController extends Controller
                 'will_assist' => $willAssit,
                 'client_id' => $clientId,
             ]);
+
+        if($calendarEvent->event_request_id) {
+            $details = CalendarEvent::query()
+                ->where('event_request_id', $calendarEvent->event_request_id)
+                ->get();
+
+            EventRequest::query()
+                ->where('id', $calendarEvent->event_request_id)
+                ->update([
+                    'price' => $details->sum('price'),
+                ]);
+        }
 
         $updatedEvent = CalendarEvent::query()
             ->find($calendarEvent->id)

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Recrivals;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EventRequestDetailResource;
 use App\Http\Resources\EventRequestResource;
+use App\Models\CalendarEvent;
 use App\Models\CalendarResource;
 use App\Models\EventRequest;
 use App\Models\EventRequestDetail;
@@ -13,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use App\Models\Client;
 
 class RequestBookingController extends Controller
 {
@@ -89,30 +91,38 @@ class RequestBookingController extends Controller
                 })->sum(),
             ]);
 
-        $details = [];
+
+        $client = Client::query()
+            ->where('user_id', $user->id)
+            ->first();
+
+        $dataToInsert = [];
 
         foreach ($events as $event) {
-            $detail = EventRequestDetail::query()
-                ->create([
-                    'event_request_id' => $eventRequest->id,
-                    'tenant_id' => $tenant->id,
-                    'user_id' => $user->id,
-                    'calendar_resource_id' => $event['resource_id'],
-                    'price' => $this->calculateRequestEventPrice(
-                        $event['start'],
-                        $event['end'],
-                        $resource->price),
-                    'start_at' => $event['start'],
-                    'end_at' => $event['end'],
-                ]);
-            $details[] = $detail;
+            $dataToInsert[] = [
+                'name' => 'Client Reservation',
+                'client_id' => $client->id,
+                'calendar_resource_id' => $event['resource_id'],
+                'user_id' => $user->id,
+                'tenant_id' => $eventRequest->tenant_id,
+                'price' => $this->calculateRequestEventPrice(
+                    $event['start'],
+                    $event['end'],
+                    $resource->price
+                ),
+                'category_id' => 1,
+                'start_at' => $event['start'],
+                'end_at' => $event['end'],
+                'event_request_id' => $eventRequest->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
         }
 
-        return EventRequestResource::make($eventRequest)->additional([
-            'meta' => [
-                'detail' => EventRequestDetailResource::collection($details),
-            ],
-        ]);
+        CalendarEvent::query()
+            ->insert($dataToInsert);
+            
+        return response()->json([], 200);
     }
 
     private function calculateRequestEventPrice($start, $end, $price)

@@ -19,6 +19,11 @@ class CalendarEvent extends Model
         return $this->belongsTo(CalendarResource::class, 'calendar_resource_id', 'id');
     }
 
+    public function sport()
+    {
+        return $this->belongsTo(Sport::class);
+    }
+
     public function client()
     {
         return $this->belongsTo(Client::class);

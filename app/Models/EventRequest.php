@@ -13,7 +13,7 @@ class EventRequest extends Model
 
     public function details()
     {
-        return $this->hasMany(EventRequestDetail::class)->orderBy('id', 'desc');
+        return $this->hasMany(CalendarEvent::class)->orderBy('id', 'desc');
     }
 
     public function facility()

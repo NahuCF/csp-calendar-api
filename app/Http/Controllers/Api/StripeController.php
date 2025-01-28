@@ -77,41 +77,18 @@ class StripeController extends Controller
                 'status' => 'succeeded',
             ]);
 
-        $details = EventRequestDetail::query()
-            ->where('event_request_id', $eventRequestId)
-            ->get();
-
         $eventRequest = EventRequest::find($eventRequestId);
         $eventRequest->update([
             'confirmed' => true,
             'is_paid' => true,
         ]);
 
-        $dataToInsert = [];
-
-        $client = Client::query()
-            ->where('user_id', $user->id)
-            ->first();
-
-        foreach ($details as $detail) {
-            $dataToInsert[] = [
-                'name' => 'Client Reservation',
-                'client_id' => $client->id,
-                'calendar_resource_id' => $detail->calendar_resource_id,
-                'user_id' => $user->id,
-                'tenant_id' => $eventRequest->tenant_id,
-                'price' => $detail->price,
-                'category_id' => 1,
-                'start_at' => $detail->start_at,
-                'is_paid' => true,
-                'end_at' => $detail->end_at,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }
-
         CalendarEvent::query()
-            ->insert($dataToInsert);
+            ->where('event_request_id', $eventRequestId)
+            ->update([
+                'confirmed' => true,
+                'is_paid' => true,
+            ]);
 
         return response()->json([], 200);
     }

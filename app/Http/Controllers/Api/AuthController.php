@@ -85,7 +85,7 @@ class AuthController extends Controller
 
         $user->api_token = $user->createToken('api-token')->plainTextToken;
 
-        $user->load('tenant');
+        $user->load('tenant', 'roles');
 
         return UserResource::make($user);
     }
