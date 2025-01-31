@@ -90,6 +90,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('request-bookings', [RequestBookingController::class, 'index'])->name('request-booking.index');
     Route::put('request-bookings/update-detail/{detail}', [RequestBookingController::class, 'updateDetail'])->name('request-booking.update-detail');
     Route::post('request-bookings/{eventRequest}/confirm', [RequestBookingController::class, 'confirmRequest'])->name('request-booking.confirm-request');
+    Route::post('request-bookings/{eventRequest}/reject', [RequestBookingController::class, 'rejectRequest'])->name('request-booking.reject-request');
 
     Route::get('/stripe/intent/create', [StripeController::class, 'createIntent']);
     Route::post('/stripe/intent/confirm', [StripeController::class, 'confirmIntent']);

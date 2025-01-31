@@ -40,6 +40,7 @@ class CalendarEventController extends Controller
             ->when(! empty($facilityIds), fn ($q) => $q->whereHas('resource.facility', fn ($query) => $query->whereIn('id', $facilityIds)))
             ->when($countrySubdivisionId, fn ($q) => $q->whereHas('resource.facility', fn ($query) => $query->where('country_subdivision_id', $countrySubdivisionId)))
             ->when($calendarResourceId, fn ($q) => $q->where('calendar_resource_id', $calendarResourceId))
+            ->where('rejected', false)
             ->where('tenant_id', $user->tenant_id)
             ->get();
 

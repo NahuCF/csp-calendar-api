@@ -75,6 +75,29 @@ class RequestBookingController extends Controller
         return response()->json($detail);
     }
 
+    public function rejectRequest(Request $request, EventRequest $eventRequest)
+    {
+        if ($eventRequest->rejected === true) {
+            return response()->json('', 200);
+        }
+
+        $calendarEvents = CalendarEvent::query()
+            ->where('event_request_id', $eventRequest->id)
+            ->get();
+
+        CalendarEvent::query()
+            ->where('id', $calendarEvents->pluck('id'))
+            ->update([
+                'rejected' => true,
+            ]);
+
+        $eventRequest->update([
+            'rejected' => true,
+        ]);
+
+        return response()->json('', 200);
+    }
+
     public function confirmRequest(Request $request, EventRequest $eventRequest)
     {
         if ($eventRequest->confirmed === true) {

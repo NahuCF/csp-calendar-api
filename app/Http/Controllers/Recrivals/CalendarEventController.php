@@ -25,6 +25,7 @@ class CalendarEventController extends Controller
         $calendarEvents = CalendarEvent::query()
             ->with(['resource.facility', 'user'])
             ->where('tenant_id', $tenant->id)
+            ->where('rejected', false)
             ->get();
 
         return CalendarEventResource::collection($calendarEvents);

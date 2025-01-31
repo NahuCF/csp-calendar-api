@@ -24,6 +24,7 @@ class EventRequestResource extends JsonResource
             'facility' => FacilityResource::make($this->whenLoaded('facility')),
             'facility_id' => $this->facility_id,
             'is_paid' => $this->is_paid,
+            'rejected' => $this->rejected,
         ];
     }
 }
