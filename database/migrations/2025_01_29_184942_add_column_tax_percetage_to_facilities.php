@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sports', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained();
-            $table->foreignUuid('tenant_id')->constrained();
-            $table->string('name');
-            $table->string('icon');
-            $table->timestamps();
+        Schema::table('facilities', function (Blueprint $table) {
+            $table->integer('tax_percentage')->default(0);
         });
     }
 
@@ -26,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sports');
+        Schema::table('facilities', function (Blueprint $table) {
+            $table->dropColumn('tax_percentage');
+        });
     }
 };
