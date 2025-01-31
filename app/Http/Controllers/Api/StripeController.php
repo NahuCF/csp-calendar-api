@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
-use Stripe\Stripe;
-use App\Models\Client;
-use App\Models\EventRequest;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use App\Models\CalendarEvent;
 use App\Models\CalendarResource;
-use App\Models\EventRequestDetail;
+use App\Models\EventRequest;
 use App\Models\StripeIntentRequest;
-use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Stripe\Stripe;
 
 class StripeController extends Controller
 {
@@ -53,7 +51,7 @@ class StripeController extends Controller
             'intent' => $paymentIntent,
             'clientSecret' => $paymentIntent->client_secret,
             'request' => $eventRequest,
-            'currency_code' => $resource->facility->currency_code
+            'currency_code' => $resource->facility->currency_code,
         ]);
     }
 
