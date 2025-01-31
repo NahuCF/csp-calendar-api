@@ -73,6 +73,7 @@ class FacilityController extends Controller
             'lat' => ['required', 'numeric'],
             'lng' => ['required', 'numeric'],
             'currency_code' => ['required', 'string', 'max:255'],
+            'tax_percentage' => ['required'],
         ]);
 
         $user = Auth::user();
@@ -81,6 +82,7 @@ class FacilityController extends Controller
         $lat = data_get($input, 'lat');
         $lng = data_get($input, 'lng');
         $currencyCode = data_get($input, 'currency_code');
+        $taxPercentage = data_get($input, 'tax_percentage');
 
         $territory = $this->territoryData($lng, $lat);
         $subTerritory = $territory ? $territory['subterritory'] : null;
@@ -104,6 +106,7 @@ class FacilityController extends Controller
                 'currency_code' => $currencyCode,
                 'lat' => $lat,
                 'lng' => $lng,
+                'tax_percentage' => $taxPercentage,
             ]);
 
         return FacilityResource::make($facility);
@@ -116,6 +119,7 @@ class FacilityController extends Controller
             'lat' => ['required', 'numeric'],
             'lng' => ['required', 'numeric'],
             'currency_code' => ['required', 'string', 'max:255'],
+            'tax_percentage' => ['required'],
         ]);
 
         $user = Auth::user();
@@ -124,6 +128,7 @@ class FacilityController extends Controller
         $lat = data_get($input, 'lat');
         $lng = data_get($input, 'lng');
         $currencyCode = data_get($input, 'currency_code');
+        $taxPercentage = data_get($input, 'tax_percentage');
 
         $user = Auth::user();
 
@@ -152,6 +157,7 @@ class FacilityController extends Controller
             'currency_code' => $currencyCode,
             'lat' => $lat,
             'lng' => $lng,
+            'tax_percentage' => $taxPercentage,
         ]);
 
         return FacilityResource::make($facility);

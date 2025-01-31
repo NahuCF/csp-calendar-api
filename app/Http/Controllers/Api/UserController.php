@@ -103,6 +103,7 @@ class UserController extends Controller
             'role_ids' => ['sometimes'],
             'avatar' => ['sometimes', 'file', 'max:2048'],
             'timezone_id' => ['sometimes'],
+            'identifier' => ['sometimes'],
         ]);
 
         $email = data_get($input, 'email');
@@ -112,6 +113,7 @@ class UserController extends Controller
         $roleIds = data_get($input, 'role_ids');
         $timezoneId = data_get($input, 'timezone_id');
         $avatar = $request->file('avatar');
+        $identifier = data_get($input, 'identifier');
 
         $existUserWithSameEmail = User::query()
             ->where('email', strtolower($email))
@@ -122,6 +124,24 @@ class UserController extends Controller
             throw ValidationException::withMessages([
                 'email' => ['Email already on use.'],
             ]);
+        }
+
+        if ($identifier) {
+            $existIdentifier = Tenant::query()
+                ->where('id', '!=', $user->tenant_id)
+                ->where('identifier', $identifier)
+                ->exists();
+
+            if ($existIdentifier) {
+
+                throw ValidationException::withMessages([
+                    'identifier' => ['Identifier already on use.'],
+                ]);
+            }
+
+            Tenant::query()
+                ->where('id', $user->tenant_id)
+                ->update(['identifier' => $identifier]);
         }
 
         $fields = [

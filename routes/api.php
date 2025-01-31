@@ -57,6 +57,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('facilities/destroy-bulk', [FacilityController::class, 'destroyBulk'])->name('facilities.destroy-bulk');
     Route::resource('facilities', FacilityController::class);
 
+    Route::post('sports/destroy-bulk', [SportController::class, 'destroyBulk'])->name('sports.destroy-bulk');
+    Route::resource('sports', SportController::class);
+
     Route::put('calendar-events/update-specific/{calendarEvent}', [CalendarEventController::class, 'updateEventRequest'])->name('calendar-events.update-specific');
     Route::get('calendar-events/client-history/{client}', [CalendarEventController::class, 'historyClient'])->name('calendar-events.history-client');
     Route::post('calendar-events/store-bulk', [CalendarEventController::class, 'storeBulk'])->name('calendar-events.store-bulk');
@@ -93,4 +96,3 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 Route::resource('countries', CountryController::class);
-Route::get('sports', [SportController::class, 'index'])->name('sports.index');

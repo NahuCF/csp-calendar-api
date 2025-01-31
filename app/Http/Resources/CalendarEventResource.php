@@ -25,8 +25,8 @@ class CalendarEventResource extends JsonResource
             'calendar_resource_id' => $this->calendar_resource_id,
             'start_date' => Carbon::parse($this->start_at)->format('Y-m-d\TH:i:s'),
             'end_date' => Carbon::parse($this->end_at)->format('Y-m-d\TH:i:s'),
-            'color' => $this->color,
             'is_paid' => (bool) $this->is_paid,
+            'type' => $this->type,
             'resource' => CalendarResourceResource::make($this->whenLoaded('resource')),
             'user' => UserResource::make($this->whenLoaded('user')),
             'price' => $this->price,
@@ -49,6 +49,8 @@ class CalendarEventResource extends JsonResource
             'will_assist' => $this->will_assist,
             'client' => ClientResource::make($this->whenLoaded('client')),
             'creation_date' => Carbon::parse($this->created_at)->format('d/m/Y h:i A'),
+            'sport_id' => $this->sport_id,
+            'sport' => SportResource::make($this->whenLoaded('sport')),
             'created_at' => $this->created_at,
         ];
     }

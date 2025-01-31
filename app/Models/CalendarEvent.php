@@ -12,7 +12,7 @@ class CalendarEvent extends Model
 
     protected $guarded = [];
 
-    protected $with = ['notes', 'client'];
+    protected $with = ['notes', 'client', 'sport'];
 
     public function resource()
     {

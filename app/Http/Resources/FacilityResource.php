@@ -29,6 +29,7 @@ class FacilityResource extends JsonResource
             'currency_code' => $this->currency_code,
             'lat' => $this->lat,
             'lng' => $this->lng,
+            'tax_percentage' => $this->tax_percentage,
         ];
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Recrivals\CalendarEventController;
 use App\Http\Controllers\Recrivals\CalendarResourceController;
 use App\Http\Controllers\Recrivals\FacilityController;
 use App\Http\Controllers\Recrivals\RequestBookingController;
+use App\Http\Controllers\Recrivals\SportController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('auth/register', [AuthController::class, 'register']);
@@ -21,3 +22,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('request-bookings', [RequestBookingController::class, 'index'])->name('request-booking.index');
     Route::post('request-bookings', [RequestBookingController::class, 'requestBooking'])->name('request-booking');
 });
+
+Route::get('sports', [SportController::class, 'index']);

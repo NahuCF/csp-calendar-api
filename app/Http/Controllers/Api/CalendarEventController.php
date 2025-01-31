@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
+use App\Http\Resources\CalendarEventResource;
+use App\Http\Resources\EventNoteResource;
+use App\Models\CalendarEvent;
+use App\Models\CalendarResource;
 use App\Models\Client;
 use App\Models\EventNote;
 use App\Models\EventRequest;
 use Illuminate\Http\Request;
-use App\Models\CalendarEvent;
 use Illuminate\Support\Carbon;
-use App\Models\CalendarResource;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Resources\EventNoteResource;
-use App\Http\Resources\CalendarEventResource;
 use Illuminate\Validation\ValidationException;
 
 class CalendarEventController extends Controller
@@ -89,6 +89,7 @@ class CalendarEventController extends Controller
             'discount_percentage' => ['sometimes', 'numeric', 'max:100'],
             'note' => ['sometimes'],
             'client_id' => ['required', 'integer'],
+            'is_paid' => ['sometimes'],
         ]);
 
         $name = data_get($input, 'name');
@@ -104,6 +105,7 @@ class CalendarEventController extends Controller
         $discountPercentage = data_get($input, 'discount_percentage');
         $note = data_get($input, 'note');
         $clientId = data_get($input, 'client_id');
+        $isPaid = data_get($input, 'is_paid') ? true : false;
 
         $user = Auth::user();
 
@@ -138,8 +140,10 @@ class CalendarEventController extends Controller
                 'price' => $price,
                 'discount' => $discountType == 'fixed' ? $discount : null,
                 'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
+                'type' => 'one-off',
                 'end_at' => $endAt,
                 'client_id' => $clientId,
+                'is_paid' => $isPaid,
             ]);
 
         if ($note) {
@@ -239,6 +243,7 @@ class CalendarEventController extends Controller
             'discount_percentage' => ['sometimes', 'numeric', 'max:100'],
             'will_assist' => ['sometimes'],
             'client_id' => ['required', 'integer'],
+            'is_paid' => ['sometimes'],
         ]);
 
         $name = data_get($input, 'name');
@@ -254,6 +259,7 @@ class CalendarEventController extends Controller
         $discountPercentage = data_get($input, 'discount_percentage');
         $willAssit = data_get($input, 'will_assist', null);
         $clientId = data_get($input, 'client_id');
+        $isPaid = data_get($input, 'is_paid') ? true : false;
 
         $user = Auth::user();
 
@@ -291,9 +297,10 @@ class CalendarEventController extends Controller
                 'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
                 'will_assist' => $willAssit,
                 'client_id' => $clientId,
+                'is_paid' => $isPaid,
             ]);
 
-        if($calendarEvent->event_request_id) {
+        if ($calendarEvent->event_request_id) {
             $details = CalendarEvent::query()
                 ->where('event_request_id', $calendarEvent->event_request_id)
                 ->get();
@@ -323,6 +330,7 @@ class CalendarEventController extends Controller
             'category_id' => ['required'],
             'client_id' => ['required'],
             'price' => ['sometimes', 'numeric'],
+            'is_paid' => ['sometimes'],
             'discount_type' => ['sometimes', 'in:percentage,fixed'],
             'discount' => ['sometimes', 'numeric'],
             'discount_percentage' => ['sometimes', 'numeric', 'max:100'],
@@ -336,6 +344,7 @@ class CalendarEventController extends Controller
         $discount = data_get($input, 'discount');
         $discountPercentage = data_get($input, 'discount_percentage');
         $clientId = data_get($input, 'client_id');
+        $isPaid = data_get($input, 'is_paid') ? true : false;
 
         if (($discountType == 'percentage' && ! $discountPercentage) || ($discountType == 'fixed' && ! $discount)) {
             throw ValidationException::withMessages([
@@ -345,7 +354,7 @@ class CalendarEventController extends Controller
 
         $user = Auth::user();
 
-        $dataToInsert = collect($reservations)->map(function ($reservation) use ($user, $name, $clientId, $categoryId, $price, $discount, $discountType, $discountPercentage) {
+        $dataToInsert = collect($reservations)->map(function ($reservation) use ($user, $name, $clientId, $categoryId, $price, $discount, $discountType, $discountPercentage, $isPaid) {
             $startAt = Carbon::make($reservation['start_at']);
             $endAt = Carbon::make($reservation['end_at']);
 
@@ -361,6 +370,8 @@ class CalendarEventController extends Controller
                 'price' => $price,
                 'discount' => $discountType == 'fixed' ? $discount : null,
                 'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
+                'is_paid' => $isPaid,
+                'type' => 'recurrent',
                 'created_at' => now(),
                 'updated_at' => now(),
             ];

@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Recrivals;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\EventRequestDetailResource;
 use App\Http\Resources\EventRequestResource;
 use App\Models\CalendarEvent;
 use App\Models\CalendarResource;
+use App\Models\Category;
+use App\Models\Client;
 use App\Models\EventRequest;
-use App\Models\EventRequestDetail;
+use App\Models\Facility;
 use App\Models\Tenant;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use App\Models\Client;
 
 class RequestBookingController extends Controller
 {
@@ -39,6 +39,7 @@ class RequestBookingController extends Controller
             'events.*.start' => ['required'],
             'events.*.end' => ['required'],
             'events.*.resource_id' => ['required'],
+            'events.*.facility_id' => ['required'],
             'identifier' => ['required'],
             'notes' => ['sometimes'],
             'resource_id' => ['required'],
@@ -70,6 +71,17 @@ class RequestBookingController extends Controller
             ->where('id', $resourceId)
             ->first();
 
+        $clientCategory = Category::query()
+            ->whereNull('tenant_id')
+            ->whereNull('user_id')
+            ->where('name', 'Client')
+            ->first();
+
+        $facilitiesById = Facility::query()
+            ->whereIn('id', collect($events)->pluck('facility_id'))
+            ->get()
+            ->keyBy('id');
+
         $eventRequest = EventRequest::query()
             ->create([
                 'tenant_id' => $tenant->id,
@@ -82,15 +94,15 @@ class RequestBookingController extends Controller
                     ->where('tenant_id', $tenant->id)
                     ->select('request_id')
                     ->max('request_id') + 1,
-                'price' => collect($events)->map(function ($event) use ($resource) {
+                'price' => collect($events)->map(function ($event) use ($resource, $facilitiesById) {
                     return $this->calculateRequestEventPrice(
                         $event['start'],
                         $event['end'],
-                        $resource->price
+                        $resource->price,
+                        $facilitiesById->get($event['facility_id'])->tax_percentage
                     );
                 })->sum(),
             ]);
-
 
         $client = Client::query()
             ->where('user_id', $user->id)
@@ -100,17 +112,19 @@ class RequestBookingController extends Controller
 
         foreach ($events as $event) {
             $dataToInsert[] = [
-                'name' => 'Client Reservation',
+                'name' => '',
                 'client_id' => $client->id,
+                'category_id' => $clientCategory->id,
                 'calendar_resource_id' => $event['resource_id'],
                 'user_id' => $user->id,
+                'sport_id' => $sportId,
                 'tenant_id' => $eventRequest->tenant_id,
                 'price' => $this->calculateRequestEventPrice(
                     $event['start'],
                     $event['end'],
-                    $resource->price
+                    $resource->price,
+                    $facilitiesById->get($event['facility_id'])->tax_percentage
                 ),
-                'category_id' => 1,
                 'start_at' => $event['start'],
                 'end_at' => $event['end'],
                 'event_request_id' => $eventRequest->id,
@@ -121,16 +135,20 @@ class RequestBookingController extends Controller
 
         CalendarEvent::query()
             ->insert($dataToInsert);
-            
+
         return response()->json([], 200);
     }
 
-    private function calculateRequestEventPrice($start, $end, $price)
+    private function calculateRequestEventPrice($start, $end, $price, $taxPercentage)
     {
         $start = Carbon::parse($start);
         $end = Carbon::parse($end);
 
         $halfHours = abs($end->diffInMinutes($start) / 30);
+
+        if ($taxPercentage) {
+            $price = $price + ($price * $taxPercentage / 100);
+        }
 
         return $halfHours * $price;
     }

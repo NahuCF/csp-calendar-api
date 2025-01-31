@@ -25,8 +25,13 @@ class CategoryController extends Controller
 
         $clients = Category::query()
             ->withCount('events')
-            ->where('tenant_id', $user->tenant_id)
+            ->where(function ($query) use ($user) {
+                $query->where('tenant_id', $user->tenant_id)
+                    ->orWhereNull('tenant_id')
+                    ->orWhereNull('user_id');
+            })
             ->when($search, fn ($q) => $q->where('name', 'like', "%{$search}%"))
+            ->orderByRaw('CASE WHEN tenant_id IS NULL AND user_id IS NULL THEN 0 ELSE 1 END')
             ->orderBy('id', 'asc');
 
         $clients = $paginated ? $clients->paginate(15) : $clients->get();
