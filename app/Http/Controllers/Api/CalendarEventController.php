@@ -90,6 +90,7 @@ class CalendarEventController extends Controller
             'note' => ['sometimes'],
             'client_id' => ['required', 'integer'],
             'is_paid' => ['sometimes'],
+            'sport_id' => ['sometimes'],
         ]);
 
         $name = data_get($input, 'name');
@@ -106,6 +107,7 @@ class CalendarEventController extends Controller
         $note = data_get($input, 'note');
         $clientId = data_get($input, 'client_id');
         $isPaid = data_get($input, 'is_paid') ? true : false;
+        $sportId = data_get($input, 'sport_id');
 
         $user = Auth::user();
 
@@ -144,6 +146,7 @@ class CalendarEventController extends Controller
                 'end_at' => $endAt,
                 'client_id' => $clientId,
                 'is_paid' => $isPaid,
+                'sport_id' => $sportId,
             ]);
 
         if ($note) {
@@ -244,6 +247,7 @@ class CalendarEventController extends Controller
             'will_assist' => ['sometimes'],
             'client_id' => ['required', 'integer'],
             'is_paid' => ['sometimes'],
+            'sport_id' => ['sometimes'],
         ]);
 
         $name = data_get($input, 'name');
@@ -260,6 +264,7 @@ class CalendarEventController extends Controller
         $willAssit = data_get($input, 'will_assist', null);
         $clientId = data_get($input, 'client_id');
         $isPaid = data_get($input, 'is_paid') ? true : false;
+        $sportId = data_get($input, 'sport_id');
 
         $user = Auth::user();
 
@@ -298,6 +303,7 @@ class CalendarEventController extends Controller
                 'will_assist' => $willAssit,
                 'client_id' => $clientId,
                 'is_paid' => $isPaid,
+                'sport_id' => $sportId,
             ]);
 
         if ($calendarEvent->event_request_id) {
