@@ -16,7 +16,7 @@ class Sport extends Model
         return $this->hasMany(CalendarEvent::class);
     }
 
-    public function user() 
+    public function user()
     {
         return $this->belongsTo(User::class);
     }

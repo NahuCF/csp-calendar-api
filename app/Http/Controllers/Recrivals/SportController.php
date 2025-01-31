@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Recrivals;
 
+use App\Http\Controllers\Controller;
+use App\Http\Resources\SportResource;
 use App\Models\Sport;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use App\Http\Resources\SportResource;
 use Illuminate\Validation\ValidationException;
 
 class SportController extends Controller
@@ -14,7 +14,7 @@ class SportController extends Controller
     public function index(Request $request)
     {
         $input = $request->validate([
-            'identifier' => ['required']
+            'identifier' => ['required'],
         ]);
 
         $identifier = data_get($input, 'identifier');
@@ -23,9 +23,9 @@ class SportController extends Controller
             ->where('identifier', $identifier)
             ->first();
 
-        if(!$tenant) {
+        if (! $tenant) {
             throw ValidationException::withMessages([
-                'identifier' => 'Invalid identifier'
+                'identifier' => 'Invalid identifier',
             ]);
         }
 

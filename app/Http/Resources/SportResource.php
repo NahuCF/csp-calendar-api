@@ -19,7 +19,7 @@ class SportResource extends JsonResource
             'name' => $this->name,
             'icon' => $this->icon,
             'events_count' => $this->whenNotNull($this->events_count),
-            'user'=> UserResource::make($this->whenLoaded('user'))
+            'user' => UserResource::make($this->whenLoaded('user')),
         ];
     }
 }
