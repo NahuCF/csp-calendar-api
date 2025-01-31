@@ -50,7 +50,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('calendar-resources', [CalendarResourceController::class, 'index'])->name('calendar-resource.index')->middleware(CheckPermission::class.':View Calendar');
     Route::put('calendar-resources/{calendar_resource}', [CalendarResourceController::class, 'update'])->name('calendar-resource.update');
     Route::post('calendar-resources', [CalendarResourceController::class, 'store'])->name('calendar-resource.store')->middleware(CheckPermission::class.':Create Resources');
-    Route::delete('calendar-resource/{calendar_resource}', [CalendarResourceController::class, 'destroy'])->name('calendar-resource.delete');
+    Route::delete('calendar-resources/{calendar_resource}', [CalendarResourceController::class, 'destroy'])->name('calendar-resource.delete');
     Route::get('calendar-resource-types', [CalendarResourceTypeController::class, 'index'])->name('calendar-resource-types.index');
 
     Route::get('facilities/with-events', [FacilityController::class, 'facilitiesWithEvents']);
