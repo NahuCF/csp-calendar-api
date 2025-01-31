@@ -158,7 +158,7 @@ class CalendarEventController extends Controller
                 ]);
         }
 
-        $calendarEvent->load('user', 'notes');
+        $calendarEvent->load('user', 'notes', 'sport');
 
         return CalendarEventResource::make($calendarEvent);
     }
@@ -320,7 +320,7 @@ class CalendarEventController extends Controller
 
         $updatedEvent = CalendarEvent::query()
             ->find($calendarEvent->id)
-            ->load('user');
+            ->load('user', 'sport', 'notes');
 
         return CalendarEventResource::make($updatedEvent);
     }
