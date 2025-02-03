@@ -28,7 +28,7 @@ class CalendarEventController extends Controller
 
         $user = Auth::user();
 
-        $calendarResourceId = data_get($input, 'calendar_resource_type_id');
+        $calendarResourceTypeId = data_get($input, 'calendar_resource_type_id');
         $facilityIds = data_get($input, 'facility_ids', []);
         $isPaid = data_get($input, 'is_paid');
         $isPaidBoolean = $isPaid == 'true' ? true : false;
@@ -39,7 +39,7 @@ class CalendarEventController extends Controller
             ->when($isPaid, fn ($q) => $q->where('is_paid', $isPaidBoolean))
             ->when(! empty($facilityIds), fn ($q) => $q->whereHas('resource.facility', fn ($query) => $query->whereIn('id', $facilityIds)))
             ->when($countrySubdivisionId, fn ($q) => $q->whereHas('resource.facility', fn ($query) => $query->where('country_subdivision_id', $countrySubdivisionId)))
-            ->when($calendarResourceId, fn ($q) => $q->where('calendar_resource_id', $calendarResourceId))
+            ->when($calendarResourceTypeId, fn ($q) => $q->whereHas('resource', fn($query) => $query->where('calendar_resource_type_id',$calendarResourceTypeId)))
             ->where('rejected', false)
             ->where('tenant_id', $user->tenant_id)
             ->get();
