@@ -86,7 +86,7 @@ class RequestBookingController extends Controller
             ->get();
 
         CalendarEvent::query()
-            ->where('id', $calendarEvents->pluck('id'))
+            ->whereIn('id', $calendarEvents->pluck('id'))
             ->update([
                 'rejected' => true,
             ]);
