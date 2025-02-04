@@ -44,6 +44,8 @@ class StripeController extends Controller
             $intentPayload['payment_method_configuration'] = $configId;
         }
 
+        return response()->json($configId);
+
         $paymentIntent = \Stripe\PaymentIntent::create($intentPayload);
 
         StripeIntentRequest::query()
