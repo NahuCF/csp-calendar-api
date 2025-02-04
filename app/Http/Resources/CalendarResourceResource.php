@@ -26,6 +26,7 @@ class CalendarResourceResource extends JsonResource
             'resource_type' => CalendarResourceTypeResource::make($this->whenLoaded('calendarResourceType')),
             'events_count' => $this->whenNotNull($this->events_count),
             'price' => $this->price,
+            'facilities' => FacilityResource::collection($this->whenLoaded('facilities')),
         ];
     }
 }

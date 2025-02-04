@@ -11,6 +11,8 @@ class CalendarResource extends Model
 
     protected $guarded = [];
 
+    protected $with = ['facility'];
+
     public function facility()
     {
         return $this->belongsTo(Facility::class);
