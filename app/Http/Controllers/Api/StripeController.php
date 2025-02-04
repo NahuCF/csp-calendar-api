@@ -32,11 +32,19 @@ class StripeController extends Controller
 
         $resource = CalendarResource::find($eventRequest->calendar_resource_id);
 
-        $paymentIntent = \Stripe\PaymentIntent::create([
+        $configId = env('STRIPE_PAYMENT_METHOD_CONFIGURATION');
+
+        $intentPayload = [
             'amount' => $eventRequest->price * 100,  // In cents
             'currency' => strtolower($resource->facility->currency_code),
             'automatic_payment_methods' => ['enabled' => true],
-        ]);
+        ];
+
+        if ($configId) {
+            $intentPayload['payment_method_configuration'] = $configId;
+        }
+
+        $paymentIntent = \Stripe\PaymentIntent::create($intentPayload);
 
         StripeIntentRequest::query()
             ->create([
