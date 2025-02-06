@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('calendar_events', function (Blueprint $table) {
-            $table->text('cancelation_reason')->nullable();
+            $table->text('cancellation_reason')->nullable();
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('calendar_events', function (Blueprint $table) {
-            $table->dropColumn('cancelation_reason');
+            $table->dropColumn('cancellation_reason');
         });
     }
 };

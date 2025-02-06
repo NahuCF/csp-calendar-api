@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dowloads;
 
+use App\Exports\CancellationExport;
 use App\Exports\ReservationExport;
 use App\Http\Controllers\Controller;
 use App\Services\ReportService;
@@ -25,6 +26,27 @@ class ReportController extends Controller
 
         $data = (new ReportService)->generateReservationReport($startDate, $endDate, $tenantId);
 
-        return Excel::download(new ReservationExport($data), 'Reservation Report.xlsx');
+        $nameFile = 'Reservation Report '.$startDate->format('m-d-Y').' to '.$endDate->format('m-d-Y').'.xlsx';
+
+        return Excel::download(new ReservationExport($data), $nameFile);
+    }
+
+    public function cancellations(Request $request)
+    {
+        $input = $request->validate([
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date'],
+            'tenant_id' => ['required'],
+        ]);
+
+        $startDate = Carbon::make(data_get($input, 'start_date'));
+        $endDate = Carbon::make(data_get($input, 'end_date'));
+        $tenantId = data_get($input, 'tenant_id');
+
+        $data = (new ReportService)->generateCancellationReport($startDate, $endDate, $tenantId);
+
+        $nameFile = 'Cancellation Report '.$startDate->format('m-d-Y').' to '.$endDate->format('m-d-Y').'.xlsx';
+
+        return Excel::download(new CancellationExport($data), $nameFile);
     }
 }

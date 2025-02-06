@@ -69,7 +69,7 @@ class CalendarEventController extends Controller
             'cancelation_reason' => ['sometimes'],
         ]);
 
-        $calendarEvent->cancelation_reason = data_get($input, 'cancelation_reason');
+        $calendarEvent->cancellation_reason = data_get($input, 'cancelation_reason');
         $calendarEvent->will_assist = (bool) data_get($input, 'will_assist');
         $calendarEvent->save();
 

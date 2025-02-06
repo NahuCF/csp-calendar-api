@@ -97,6 +97,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/stripe/intent/confirm', [StripeController::class, 'confirmIntent']);
 
     Route::get('reports/reservations', [ReportController::class, 'reservations']);
+    Route::get('reports/cancellations', [ReportController::class, 'cancellations']);
 });
 
 Route::resource('countries', CountryController::class);
