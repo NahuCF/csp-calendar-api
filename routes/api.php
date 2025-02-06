@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\CountryController;
 use App\Http\Controllers\Api\FacilityController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RequestBookingController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SportController;
@@ -94,6 +95,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('/stripe/intent/create', [StripeController::class, 'createIntent']);
     Route::post('/stripe/intent/confirm', [StripeController::class, 'confirmIntent']);
+
+    Route::get('reports/reservations', [ReportController::class, 'reservations']);
 });
 
 Route::resource('countries', CountryController::class);

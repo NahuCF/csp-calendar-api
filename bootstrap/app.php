@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('api')
                 ->prefix('recrivals')
                 ->group(base_path('routes/recrivals.php'));
+            Route::middleware('api')
+                ->prefix('dowloads')
+                ->group(base_path('routes/dowloads.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
