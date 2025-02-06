@@ -27,6 +27,7 @@ class CalendarEventResource extends JsonResource
             'end_date' => Carbon::parse($this->end_at)->format('Y-m-d\TH:i:s'),
             'is_paid' => (bool) $this->is_paid,
             'type' => $this->type,
+            'cancelation_reason' => $this->cancelation_reason,
             'resource' => CalendarResourceResource::make($this->whenLoaded('resource')),
             'user' => UserResource::make($this->whenLoaded('user')),
             'price' => $this->price,

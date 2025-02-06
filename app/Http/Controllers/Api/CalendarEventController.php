@@ -66,8 +66,10 @@ class CalendarEventController extends Controller
     {
         $input = $request->validate([
             'will_assist' => ['required'],
+            'cancelation_reason' => ['sometimes'],
         ]);
 
+        $calendarEvent->cancelation_reason = data_get($input, 'cancelation_reason');
         $calendarEvent->will_assist = (bool) data_get($input, 'will_assist');
         $calendarEvent->save();
 
