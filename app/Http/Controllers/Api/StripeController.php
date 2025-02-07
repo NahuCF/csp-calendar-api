@@ -89,11 +89,14 @@ class StripeController extends Controller
             'is_paid' => true,
         ]);
 
+        $resource = CalendarResource::find($eventRequest->calendar_resource_id);
+
         CalendarEvent::query()
             ->where('event_request_id', $eventRequestId)
             ->update([
                 'confirmed' => true,
                 'is_paid' => true,
+                'paid_currency_code' => $resource->facility->currency_code,
             ]);
 
         return response()->json([], 200);

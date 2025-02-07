@@ -72,4 +72,50 @@ class ReportService
             ];
         })->toArray();
     }
+
+    public function generateSalesReport($startDate, $endDate, $tenantId)
+    {
+        $resourcesById = CalendarResource::query()
+            ->with('facility')
+            ->where('tenant_id', $tenantId)
+            ->get()
+            ->keyBy('id');
+
+        $events = CalendarEvent::query()
+            ->with('resource.facility')
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->where('tenant_id', $tenantId)
+            ->where('is_paid', true)
+            ->get()
+            ->sortBy('resource.facility.name');
+
+        $mostFrequentResources = $events->groupBy('calendar_resource_id')
+            ->map(function ($events) {
+                return $events->count();
+            })
+            ->sort()
+            ->reverse()
+            ->take(3)
+            ->keys();
+
+        return [
+            'transactions' => $events->count(),
+            'avg_transaction_price_usd' => round($events->where('paid_currency_code', 'USD')->avg('price'), 2),
+            'avg_transaction_price_cad' => round($events->where('paid_currency_code', 'CAD')->avg('price'), 2),
+            'total_revenue_cad' => round($events->where('paid_currency_code', 'CAD')->sum('price'), 2),
+            'total_revenue_usd' => round($events->where('paid_currency_code', 'USD')->sum('price'), 2),
+            'top_resources' => $mostFrequentResources->map(function ($resourceId) use ($resourcesById, $events) {
+                $resource = $resourcesById->get($resourceId);
+
+                return [
+                    'id' => $resourceId,
+                    'name' => $resource->name,
+                    'facility_name' => $resource->facility->name,
+                    'events' => $events->where('calendar_resource_id', $resourceId)->count(),
+                ];
+            }),
+
+        ];
+    }
 }

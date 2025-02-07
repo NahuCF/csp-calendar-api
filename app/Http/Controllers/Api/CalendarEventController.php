@@ -109,7 +109,7 @@ class CalendarEventController extends Controller
         $discountPercentage = data_get($input, 'discount_percentage');
         $note = data_get($input, 'note');
         $clientId = data_get($input, 'client_id');
-        $isPaid = data_get($input, 'is_paid') ? true : false;
+        $isPaid = data_get($input, 'is_paid') == 'true' ? true : false;
         $sportId = data_get($input, 'sport_id');
 
         $user = Auth::user();
@@ -134,6 +134,8 @@ class CalendarEventController extends Controller
         $startAt = Carbon::make($startDate)->setTimeFromTimeString($startTime);
         $endAt = Carbon::make($endDate)->setTimeFromTimeString($endTime);
 
+        $currencyCode = CalendarResource::find($calendarResourceId)->facility->currency_code;
+
         $calendarEvent = CalendarEvent::query()
             ->create([
                 'name' => $name,
@@ -149,6 +151,7 @@ class CalendarEventController extends Controller
                 'end_at' => $endAt,
                 'client_id' => $clientId,
                 'is_paid' => $isPaid,
+                'paid_currency_code' => $isPaid ? $currencyCode : null,
                 'sport_id' => $sportId,
             ]);
 
@@ -291,6 +294,8 @@ class CalendarEventController extends Controller
         $startAt = Carbon::make($startDate)->setTimeFromTimeString($startTime);
         $endAt = Carbon::make($endDate)->setTimeFromTimeString($endTime);
 
+        $currencyCode = CalendarResource::find($calendarResourceId)->facility->currency_code;
+
         $calendarEvent
             ->update([
                 'name' => $name,
@@ -306,6 +311,7 @@ class CalendarEventController extends Controller
                 'will_assist' => $willAssit,
                 'client_id' => $clientId,
                 'is_paid' => $isPaid,
+                'paid_currency_code' => $isPaid ? $currencyCode : null,
                 'sport_id' => $sportId,
             ]);
 

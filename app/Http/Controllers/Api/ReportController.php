@@ -43,4 +43,21 @@ class ReportController extends Controller
 
         return response()->json($data);
     }
+
+    public function sales(Request $request)
+    {
+        $input = $request->validate([
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date'],
+        ]);
+
+        $startDate = Carbon::make(data_get($input, 'start_date'));
+        $endDate = Carbon::make(data_get($input, 'end_date'));
+
+        $user = Auth::user();
+
+        $data = (new ReportService)->generateSalesReport($startDate, $endDate, $user->tenant_id);
+
+        return response()->json($data);
+    }
 }
