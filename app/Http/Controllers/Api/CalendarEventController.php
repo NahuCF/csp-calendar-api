@@ -10,6 +10,8 @@ use App\Models\CalendarResource;
 use App\Models\Client;
 use App\Models\EventNote;
 use App\Models\EventRequest;
+use App\Models\User;
+use App\Notifications\CancellationSMS;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -41,6 +43,7 @@ class CalendarEventController extends Controller
             ->when($countrySubdivisionId, fn ($q) => $q->whereHas('resource.facility', fn ($query) => $query->where('country_subdivision_id', $countrySubdivisionId)))
             ->when($calendarResourceTypeId, fn ($q) => $q->whereHas('resource', fn ($query) => $query->where('calendar_resource_type_id', $calendarResourceTypeId)))
             ->where('rejected', false)
+            ->where(fn ($q) => $q->where('will_assist', true)->orWhere('will_assist', null))
             ->where('tenant_id', $user->tenant_id)
             ->get();
 
@@ -68,6 +71,23 @@ class CalendarEventController extends Controller
             'will_assist' => ['required'],
             'cancelation_reason' => ['sometimes'],
         ]);
+
+        $user = Auth::user();
+
+        $client = Client::find($calendarEvent->client_id);
+
+        try {
+            User::find($user->id)
+                ->notify(new CancellationSMS(
+                    number: $client->prefix.$client->cellphone,
+                    resource: $calendarEvent->resource->name,
+                    facility: $calendarEvent->resource->facility->name,
+                    start_date: Carbon::make($calendarEvent->start_at)->format('m/d/Y'),
+                    end_date: Carbon::make($calendarEvent->end_at)->format('m/d/Y'),
+                    reason: data_get($input, 'cancelation_reason')
+                ));
+        } catch (\Exception $e) {
+        }
 
         $calendarEvent->cancellation_reason = data_get($input, 'cancelation_reason');
         $calendarEvent->will_assist = (bool) data_get($input, 'will_assist');
