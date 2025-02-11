@@ -26,7 +26,12 @@ class AuthController extends Controller
         $email = data_get($input, 'email');
         $password = data_get($input, 'password');
 
-        $user = User::where('email', $email)->first();
+        $user = User::query()
+            ->with('permissions')
+            ->where('email', $email)
+            ->first();
+
+        $user->permissions = $user->getPermissionsViaRoles();
 
         if (! $user || ! Hash::check($password, $user->password)) {
             throw ValidationException::withMessages([
@@ -86,6 +91,7 @@ class AuthController extends Controller
         $user->api_token = $user->createToken('api-token')->plainTextToken;
 
         $user->load('tenant', 'roles');
+        $user->permissions = $user->getPermissionsViaRoles();
 
         return UserResource::make($user);
     }
