@@ -8,10 +8,12 @@ use App\Http\Resources\EventNoteResource;
 use App\Models\CalendarEvent;
 use App\Models\CalendarResource;
 use App\Models\Client;
+use App\Models\EventBatch;
 use App\Models\EventNote;
 use App\Models\EventRequest;
 use App\Models\User;
 use App\Notifications\CancellationSMS;
+use App\Notifications\ReservationConfirmedSMS;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -47,6 +49,23 @@ class CalendarEventController extends Controller
             ->where('tenant_id', $user->tenant_id)
             ->get();
 
+        $calendarEvents->transform(function ($calendarEvent) {
+            if ($calendarEvent->type == 'recurrent' && $calendarEvent->event_batch_id) {
+                $calendarEvent->reservations =
+                    CalendarEventResource::collection(
+                        CalendarEvent::query()
+                            ->with(['resource.facility', 'user'])
+                            ->where('event_batch_id', $calendarEvent->event_batch_id)
+                            ->where('rejected', false)
+                            ->where(fn ($q) => $q->where('will_assist', true)->orWhere('will_assist', null))
+                            ->orderBy('start_at', 'asc')
+                            ->get()
+                    );
+            }
+
+            return $calendarEvent;
+        });
+
         return CalendarEventResource::collection($calendarEvents);
     }
 
@@ -76,21 +95,41 @@ class CalendarEventController extends Controller
 
         $client = Client::find($calendarEvent->client_id);
 
+        $willAssit = (bool) data_get($input, 'will_assist');
+        $cancellationReason = data_get($input, 'cancelation_reason');
+
         try {
-            User::find($user->id)
-                ->notify(new CancellationSMS(
-                    number: $client->prefix.$client->cellphone,
-                    resource: $calendarEvent->resource->name,
-                    facility: $calendarEvent->resource->facility->name,
-                    start_date: Carbon::make($calendarEvent->start_at)->format('m/d/Y'),
-                    end_date: Carbon::make($calendarEvent->end_at)->format('m/d/Y'),
-                    reason: data_get($input, 'cancelation_reason')
-                ));
+            $startDate = Carbon::make($calendarEvent->start_at)->format('m/d/Y g:i A');
+            $endDate = Carbon::make($calendarEvent->end_at)->format('m/d/Y g:i A');
+
+            if ($willAssit) {
+                User::find($user->id)
+                    ->notify(new ReservationConfirmedSMS(
+                        number: $client->prefix.$client->cellphone,
+                        resource: $calendarEvent->resource->name,
+                        facility: $calendarEvent->resource->facility->name,
+                        start_date: $startDate,
+                        end_date: $endDate,
+                    ));
+            } else {
+
+                User::find($user->id)
+                    ->notify(new CancellationSMS(
+                        number: $client->prefix.$client->cellphone,
+                        resource: $calendarEvent->resource->name,
+                        facility: $calendarEvent->resource->facility->name,
+                        start_date: $startDate,
+                        end_date: $endDate,
+                        reason: $cancellationReason
+                    ));
+            }
         } catch (\Exception $e) {
+
+            return response()->json($e->getMessage(), 500);
         }
 
-        $calendarEvent->cancellation_reason = data_get($input, 'cancelation_reason');
-        $calendarEvent->will_assist = (bool) data_get($input, 'will_assist');
+        $calendarEvent->cancellation_reason = $cancellationReason;
+        $calendarEvent->will_assist = $willAssit;
         $calendarEvent->save();
 
         return CalendarEventResource::make($calendarEvent);
@@ -113,6 +152,7 @@ class CalendarEventController extends Controller
             'note' => ['sometimes'],
             'client_id' => ['required', 'integer'],
             'is_paid' => ['sometimes'],
+            'has_discount' => ['sometimes'],
             'sport_id' => ['sometimes'],
         ]);
 
@@ -130,6 +170,7 @@ class CalendarEventController extends Controller
         $note = data_get($input, 'note');
         $clientId = data_get($input, 'client_id');
         $isPaid = data_get($input, 'is_paid') == 'true' ? true : false;
+        $hasDiscount = data_get($input, 'has_discount') == 'true' ? true : false;
         $sportId = data_get($input, 'sport_id');
 
         $user = Auth::user();
@@ -156,24 +197,29 @@ class CalendarEventController extends Controller
 
         $currencyCode = CalendarResource::find($calendarResourceId)->facility->currency_code;
 
+        $data = [
+            'name' => $name,
+            'tenant_id' => $user->tenant_id,
+            'user_id' => $user->id,
+            'calendar_resource_id' => $calendarResourceId,
+            'category_id' => $categoryId,
+            'start_at' => $startAt,
+            'price' => $price,
+            'type' => 'one-off',
+            'end_at' => $endAt,
+            'client_id' => $clientId,
+            'is_paid' => $isPaid,
+            'paid_currency_code' => $isPaid ? $currencyCode : null,
+            'sport_id' => $sportId,
+        ];
+
+        if ($hasDiscount) {
+            $data['discount'] = $discountType == 'fixed' ? $discount : null;
+            $data['discount_percentage'] = $discountType == 'percentage' ? $discountPercentage : null;
+        }
+
         $calendarEvent = CalendarEvent::query()
-            ->create([
-                'name' => $name,
-                'tenant_id' => $user->tenant_id,
-                'user_id' => $user->id,
-                'calendar_resource_id' => $calendarResourceId,
-                'category_id' => $categoryId,
-                'start_at' => $startAt,
-                'price' => $price,
-                'discount' => $discountType == 'fixed' ? $discount : null,
-                'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
-                'type' => 'one-off',
-                'end_at' => $endAt,
-                'client_id' => $clientId,
-                'is_paid' => $isPaid,
-                'paid_currency_code' => $isPaid ? $currencyCode : null,
-                'sport_id' => $sportId,
-            ]);
+            ->create($data);
 
         if ($note) {
             EventNote::query()
@@ -366,6 +412,7 @@ class CalendarEventController extends Controller
             'client_id' => ['required'],
             'price' => ['sometimes', 'numeric'],
             'is_paid' => ['sometimes'],
+            'has_discount' => ['sometimes'],
             'discount_type' => ['sometimes', 'in:percentage,fixed'],
             'discount' => ['sometimes', 'numeric'],
             'discount_percentage' => ['sometimes', 'numeric', 'max:100'],
@@ -380,6 +427,7 @@ class CalendarEventController extends Controller
         $discountPercentage = data_get($input, 'discount_percentage');
         $clientId = data_get($input, 'client_id');
         $isPaid = data_get($input, 'is_paid') ? true : false;
+        $hasDiscount = data_get($input, 'has_discount') == 'true' ? true : false;
 
         if (($discountType == 'percentage' && ! $discountPercentage) || ($discountType == 'fixed' && ! $discount)) {
             throw ValidationException::withMessages([
@@ -389,11 +437,13 @@ class CalendarEventController extends Controller
 
         $user = Auth::user();
 
-        $dataToInsert = collect($reservations)->map(function ($reservation) use ($user, $name, $clientId, $categoryId, $price, $discount, $discountType, $discountPercentage, $isPaid) {
+        $eventBatch = EventBatch::create();
+
+        $dataToInsert = collect($reservations)->map(function ($reservation) use ($user, $name, $clientId, $categoryId, $price, $discount, $discountType, $discountPercentage, $isPaid, $eventBatch, $hasDiscount) {
             $startAt = Carbon::make($reservation['start_at']);
             $endAt = Carbon::make($reservation['end_at']);
 
-            return [
+            $data = [
                 'name' => $name,
                 'tenant_id' => $user->tenant_id,
                 'user_id' => $user->id,
@@ -403,13 +453,18 @@ class CalendarEventController extends Controller
                 'category_id' => $categoryId,
                 'client_id' => $clientId,
                 'price' => $price,
-                'discount' => $discountType == 'fixed' ? $discount : null,
-                'discount_percentage' => $discountType == 'percentage' ? $discountPercentage : null,
                 'is_paid' => $isPaid,
                 'type' => 'recurrent',
+                'event_batch_id' => $eventBatch->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
+            if ($hasDiscount) {
+                $data['discount'] = $discountType == 'fixed' ? $discount : null;
+                $data['discount_percentage'] = $discountType == 'percentage' ? $discountPercentage : null;
+            }
+
+            return $data;
         });
 
         CalendarEvent::query()->insert($dataToInsert->toArray());
