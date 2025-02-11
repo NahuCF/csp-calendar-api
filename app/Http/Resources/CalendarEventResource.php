@@ -52,6 +52,7 @@ class CalendarEventResource extends JsonResource
             'creation_date' => Carbon::parse($this->created_at)->format('d/m/Y h:i A'),
             'sport_id' => $this->sport_id,
             'sport' => SportResource::make($this->whenLoaded('sport')),
+            'reservations' => $this->whenNotNull($this->reservations),
             'created_at' => $this->created_at,
         ];
     }
