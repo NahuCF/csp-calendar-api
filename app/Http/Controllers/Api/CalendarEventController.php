@@ -112,7 +112,6 @@ class CalendarEventController extends Controller
                         end_date: $endDate,
                     ));
             } else {
-
                 User::find($user->id)
                     ->notify(new CancellationSMS(
                         number: $client->prefix.$client->cellphone,
@@ -124,8 +123,6 @@ class CalendarEventController extends Controller
                     ));
             }
         } catch (\Exception $e) {
-
-            return response()->json($e->getMessage(), 500);
         }
 
         $calendarEvent->cancellation_reason = $cancellationReason;

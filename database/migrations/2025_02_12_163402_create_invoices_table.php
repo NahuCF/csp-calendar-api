@@ -11,15 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('event_request_details', function (Blueprint $table) {
+        Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('event_request_id')->constrained();
-            $table->foreignUuid('tenant_id');
-            $table->foreignId('user_id')->constrained();
-            $table->foreignId('calendar_resource_id')->constrained();
-            $table->decimal('price', 15, 2);
+            $table->integer('invoice_number');
+            $table->integer('number');
+            $table->foreignUuid('tenant_id')->constrained();
             $table->timestamp('start_at');
             $table->timestamp('end_at');
+            $table->decimal('price', 15, 2);
+            $table->decimal('discount', 15, 2);
+            $table->string('sport_name');
             $table->timestamps();
         });
     }
@@ -29,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('event_request_details');
+        Schema::dropIfExists('invoices');
     }
 };
