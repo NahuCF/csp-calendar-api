@@ -31,7 +31,6 @@ class AuthController extends Controller
             ->where('email', $email)
             ->first();
 
-
         if (! $user || ! Hash::check($password, $user->password)) {
             throw ValidationException::withMessages([
                 'credentials' => ['Invalid credentials'],
