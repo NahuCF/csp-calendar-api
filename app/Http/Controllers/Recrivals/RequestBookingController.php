@@ -67,15 +67,15 @@ class RequestBookingController extends Controller
 
         $user = Auth::user();
 
-        if (! User::find($user->id)->hasRole('Guest')) {
+        $client = Client::query()
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (! User::find($user->id)->hasRole('Guest') || ! $client) {
             throw ValidationException::withMessages([
                 'credentials' => ['Client not found'],
             ]);
         }
-
-        $client = Client::query()
-            ->where('user_id', $user->id)
-            ->first();
 
         $resource = CalendarResource::query()
             ->where('tenant_id', $tenant->id)
