@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Dowloads;
 
+use App\Http\Controllers\Controller;
+use App\Models\CalendarResource;
 use App\Models\Client;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\CalendarResource;
-use App\Http\Controllers\Controller;
 
 class InvoiceController extends Controller
 {
@@ -24,8 +24,8 @@ class InvoiceController extends Controller
         ]);
 
         $date = Carbon::make(data_get($input, 'date'))->format('l, F d Y');
-        $resourceId = data_get($input, 'resource_id');  
-        $discount = (float)data_get($input, 'discount');   
+        $resourceId = data_get($input, 'resource_id');
+        $discount = (float) data_get($input, 'discount');
         $sportId = data_get($input, 'sport_id');
         $startTime = Carbon::createFromFormat('H:i', data_get($input, 'start_time'))->format('h:i A');
         $endTime = Carbon::createFromFormat('H:i', data_get($input, 'end_time'))->format('h:i A');
@@ -35,15 +35,14 @@ class InvoiceController extends Controller
         $resource = CalendarResource::find($resourceId);
         $clientName = Client::find($clientId)->name;
 
-        $currency =  $resource->facility->currency_code;
+        $currency = $resource->facility->currency_code;
         $facilityName = $resource->facility->name;
         $resourceName = $resource->name;
-        
+
         $pdf = Pdf::loadView('pdf.invoice', ['data' => 'Your data here']);
 
-
-        $dateFile= Carbon::now()->format('d-m-Y');
-        $nameFile = 'Invoice-' . $clientName . '-' . $dateFile . '.pdf';
+        $dateFile = Carbon::now()->format('d-m-Y');
+        $nameFile = 'Invoice-'.$clientName.'-'.$dateFile.'.pdf';
 
         return $pdf->download($nameFile);
     }
