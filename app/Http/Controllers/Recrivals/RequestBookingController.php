@@ -11,6 +11,7 @@ use App\Models\Client;
 use App\Models\EventRequest;
 use App\Models\Facility;
 use App\Models\Tenant;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -66,6 +67,16 @@ class RequestBookingController extends Controller
 
         $user = Auth::user();
 
+        if (! User::find($user->id)->hasRole('Guest')) {
+            throw ValidationException::withMessages([
+                'credentials' => ['Client not found'],
+            ]);
+        }
+
+        $client = Client::query()
+            ->where('user_id', $user->id)
+            ->first();
+
         $resource = CalendarResource::query()
             ->where('tenant_id', $tenant->id)
             ->where('id', $resourceId)
@@ -103,10 +114,6 @@ class RequestBookingController extends Controller
                     );
                 })->sum(),
             ]);
-
-        $client = Client::query()
-            ->where('user_id', $user->id)
-            ->first();
 
         $dataToInsert = [];
 

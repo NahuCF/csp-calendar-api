@@ -21,10 +21,12 @@ class AuthController extends Controller
         $input = $request->validate([
             'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['required',  'string'],
+            'check_guest' => ['sometimes'],
         ]);
 
         $email = data_get($input, 'email');
         $password = data_get($input, 'password');
+        $checkGuest = data_get($input, 'check_guest');
 
         $user = User::query()
             ->with('permissions')
@@ -34,6 +36,12 @@ class AuthController extends Controller
         if (! $user || ! Hash::check($password, $user->password)) {
             throw ValidationException::withMessages([
                 'credentials' => ['Invalid credentials'],
+            ]);
+        }
+
+        if ($checkGuest && ! User::find($user->id)->hasRole('Guest')) {
+            throw ValidationException::withMessages([
+                'credentials' => ['Client not found'],
             ]);
         }
 
