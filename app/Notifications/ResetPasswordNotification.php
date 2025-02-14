@@ -7,7 +7,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\HtmlString;
 
 class ResetPasswordNotification extends Notification implements ShouldQueue
 {
@@ -31,11 +30,8 @@ class ResetPasswordNotification extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject('Password Reset Code')
-            ->greeting('Hello!')
-            ->line('You are receiving this email because we received a password reset request for your account.')
-            ->line('Your password reset code is:')
-            ->line(new HtmlString("<h1 style='text-align: center; font-size: 32px; letter-spacing: 5px;'>{$this->token}</h1>"))
-            ->line('This code will expire in 15 minutes.')
-            ->line('If you did not request a password reset, no further action is required. Potential bad actors cannot change your password without access to your email or phone.');
+            ->view('emails.reset-password', [
+                'token' => $this->token,
+            ]);
     }
 }
