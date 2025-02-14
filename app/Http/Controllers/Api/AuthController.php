@@ -31,13 +31,14 @@ class AuthController extends Controller
             ->where('email', $email)
             ->first();
 
-        $user->permissions = $user->getPermissionsViaRoles();
 
         if (! $user || ! Hash::check($password, $user->password)) {
             throw ValidationException::withMessages([
                 'credentials' => ['Invalid credentials'],
             ]);
         }
+
+        $user->permissions = $user->getPermissionsViaRoles();
 
         $user->tokens()->delete();
 
