@@ -71,6 +71,7 @@ class RequestBookingController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
+        // User must be a 'Guest' and exist as a client for the tenant
         if (! User::find($user->id)->hasRole('Guest') || ! $client) {
             throw ValidationException::withMessages([
                 'credentials' => ['Client not found'],
@@ -97,6 +98,7 @@ class RequestBookingController extends Controller
             ->create([
                 'tenant_id' => $tenant->id,
                 'user_id' => $user->id,
+                'client_id' => $client->id,
                 'notes' => $notes,
                 'sport_id' => $sportId,
                 'calendar_resource_id' => $resourceId,
