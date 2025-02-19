@@ -35,7 +35,7 @@ class StripeController extends Controller
         $configId = env('STRIPE_PAYMENT_METHOD_CONFIGURATION');
 
         $intentPayload = [
-            'amount' => $eventRequest->price * 100,  // In cents
+            'amount' => $eventRequest->price_with_taxes * 100,  // In cents
             'currency' => strtolower($resource->facility->currency_code),
             'automatic_payment_methods' => ['enabled' => true],
         ];

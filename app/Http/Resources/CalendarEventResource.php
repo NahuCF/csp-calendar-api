@@ -31,12 +31,20 @@ class CalendarEventResource extends JsonResource
             'resource' => CalendarResourceResource::make($this->whenLoaded('resource')),
             'user' => UserResource::make($this->whenLoaded('user')),
             'price' => $this->price,
-            'real_price' => $this->discount || $this->discount_percentage
+            'price_with_discount' => $this->discount || $this->discount_percentage
                 ?
                     ($this->discount
                         ? number_format($this->price - $this->discount, 2)
                         : number_format($this->price * (1 - $this->discount_percentage / 100), 2))
                 : $this->price,
+            'taxes_amount' => $this->taxes_amount,
+            'total_to_pay' => number_format(
+                    ($this->discount || $this->discount_percentage
+                ?
+                    ($this->discount
+                        ? number_format($this->price - $this->discount, 2)
+                        : number_format($this->price * (1 - $this->discount_percentage / 100), 2))
+                : $this->price) + $this->taxes_amount, 2),
             'discount_type' => $this->discount || $this->discount_percentage
                 ?
                     ($this->discount
@@ -45,6 +53,7 @@ class CalendarEventResource extends JsonResource
                 : null,
             'discount' => $this->discount,
             'discount_percentage' => $this->discount_percentage,
+            'discount_amount' => $this->discount,
             'notes' => EventNoteResource::collection($this->whenLoaded('notes')),
             'color' => $this->category->color,
             'will_assist' => $this->will_assist,

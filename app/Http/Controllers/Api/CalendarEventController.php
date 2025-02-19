@@ -192,7 +192,10 @@ class CalendarEventController extends Controller
         $startAt = Carbon::make($startDate)->setTimeFromTimeString($startTime);
         $endAt = Carbon::make($endDate)->setTimeFromTimeString($endTime);
 
-        $currencyCode = CalendarResource::find($calendarResourceId)->facility->currency_code;
+        $facility = CalendarResource::find($calendarResourceId)->facility;
+
+        $currencyCode = $facility->currency_code;
+        $taxAmount = ($facility->tax_percentage * $price) / 100;
 
         $data = [
             'name' => $name,
@@ -205,6 +208,7 @@ class CalendarEventController extends Controller
             'type' => 'one-off',
             'end_at' => $endAt,
             'client_id' => $clientId,
+            'taxes_amount' => $taxAmount,
             'is_paid' => $isPaid,
             'paid_currency_code' => $isPaid ? $currencyCode : null,
             'sport_id' => $sportId,
