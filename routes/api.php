@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\CountryController;
 use App\Http\Controllers\Api\FacilityController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\ReportController;
@@ -88,8 +89,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('countries/with-events', [CountryController::class, 'countriesWithEvents']);
 
+    Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::put('orders/{order}/update-event/{event}', [OrderController::class, 'updateEvent'])->name('orders.update-event');
     Route::get('request-bookings', [RequestBookingController::class, 'index'])->name('request-booking.index');
-    Route::put('request-bookings/update-detail/{detail}', [RequestBookingController::class, 'updateDetail'])->name('request-booking.update-detail');
     Route::post('request-bookings/{eventRequest}/confirm', [RequestBookingController::class, 'confirmRequest'])->name('request-booking.confirm-request');
     Route::post('request-bookings/{eventRequest}/reject', [RequestBookingController::class, 'rejectRequest'])->name('request-booking.reject-request');
 
