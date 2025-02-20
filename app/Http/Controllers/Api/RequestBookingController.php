@@ -18,21 +18,21 @@ class RequestBookingController extends Controller
     {
         $input = $request->validate([
             'client_id' => ['sometimes'],
+            'sort_column' => ['sometimes', 'string'],
+            'sort_direction' => ['sometimes', 'string'],
         ]);
 
         $clientId = data_get($input, 'client_id');
+        $sortColumn = data_get($input, 'sort_column', 'id');
+        $sortDirection = data_get($input, 'sort_direction', 'desc');
 
         $user = Auth::user();
 
-        if ($clientId) {
-            $client = Client::find($clientId);
-        }
-
         $eventRequest = EventRequest::query()
-            ->with('details.resource.facility', 'sport', 'facility')
+            ->with('details.resource.facility', 'sport', 'facility', 'client')
             ->where('tenant_id', $user->tenant_id)
-            ->when($clientId, fn ($q) => $q->where('user_id', $client->user_id))
-            ->orderBy('id', 'desc')
+            ->when($clientId, fn ($q) => $q->where('client_id', $clientId))
+            ->orderBy($sortColumn, $sortDirection)
             ->paginate(15);
 
         return EventRequestResource::collection($eventRequest);

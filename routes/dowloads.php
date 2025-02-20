@@ -9,3 +9,4 @@ Route::get('reports/cancellations', [ReportController::class, 'cancellations']);
 Route::get('reports/sales', [ReportController::class, 'sales']);
 
 Route::get('invoice-preview', [InvoiceController::class, 'invoicePreview']);
+Route::get('order-invoice', [InvoiceController::class, 'orderInvoice']);

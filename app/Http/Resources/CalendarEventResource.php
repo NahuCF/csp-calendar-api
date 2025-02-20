@@ -39,17 +39,17 @@ class CalendarEventResource extends JsonResource
                 : $this->price,
             'taxes_amount' => $this->taxes_amount,
             'total_to_pay' => number_format(
-                    ($this->discount || $this->discount_percentage
+                ($this->discount || $this->discount_percentage
                 ?
-                    ($this->discount
-                        ? number_format($this->price - $this->discount, 2)
-                        : number_format($this->price * (1 - $this->discount_percentage / 100), 2))
+                ($this->discount
+                    ? number_format($this->price - $this->discount, 2)
+                    : number_format($this->price * (1 - $this->discount_percentage / 100), 2))
                 : $this->price) + $this->taxes_amount, 2),
             'discount_type' => $this->discount || $this->discount_percentage
                 ?
                     ($this->discount
-                        ? 'fixed'
-                        : 'percentage')
+                    ? 'fixed'
+                    : 'percentage')
                 : null,
             'discount' => $this->discount,
             'discount_percentage' => $this->discount_percentage,

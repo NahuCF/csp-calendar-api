@@ -21,6 +21,11 @@ class EventRequest extends Model
         return $this->belongsTo(Facility::class);
     }
 
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
+    }
+
     public function sport()
     {
         return $this->belongsTo(Sport::class);

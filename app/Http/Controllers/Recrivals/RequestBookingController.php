@@ -94,6 +94,25 @@ class RequestBookingController extends Controller
             ->get()
             ->keyBy('id');
 
+        // Price without taxes
+        $price = collect($events)->map(function ($event) use ($resource) {
+            return $this->calculateRequestEventPrice(
+                $event['start'],
+                $event['end'],
+                $resource->price,
+            );
+        })->sum();
+
+        $taxAmount = collect($events)->map(function ($event) use ($resource, $facilitiesById) {
+            return ($this->calculateRequestEventPrice(
+                $event['start'],
+                $event['end'],
+                $resource->price,
+            ) * $facilitiesById->get($event['facility_id'])->tax_percentage) / 100;
+        })->sum();
+
+        $discountAmount = 0;
+
         $eventRequest = EventRequest::query()
             ->create([
                 'tenant_id' => $tenant->id,
@@ -107,28 +126,11 @@ class RequestBookingController extends Controller
                     ->where('tenant_id', $tenant->id)
                     ->select('request_id')
                     ->max('request_id') + 1,
-                'price' => collect($events)->map(function ($event) use ($resource) {
-                    return $this->calculateRequestEventPrice(
-                        $event['start'],
-                        $event['end'],
-                        $resource->price,
-                    );
-                })->sum(),
-                'tax_amount' => collect($events)->map(function ($event) use ($resource, $facilitiesById) {
-                    return ($this->calculateRequestEventPrice(
-                        $event['start'],
-                        $event['end'],
-                        $resource->price,
-                    ) * $facilitiesById->get($event['facility_id'])->tax_percentage) / 100;
-                })->sum(),
-                'price_with_taxes' => collect($events)->map(function ($event) use ($resource, $facilitiesById) {
-                    return $this->calculateRequestEventPrice(
-                        $event['start'],
-                        $event['end'],
-                        $resource->price,
-                        $facilitiesById->get($event['facility_id'])->tax_percentage
-                    );
-                })->sum(),
+                'price' => $price,
+                'tax_amount' => $taxAmount,
+                'discount_amount' => $discountAmount,
+                'price_with_taxes' => $price + $taxAmount,
+                'total_to_pay' => $price + $taxAmount - $discountAmount,
             ]);
 
         $dataToInsert = [];
@@ -155,6 +157,7 @@ class RequestBookingController extends Controller
                 'start_at' => $event['start'],
                 'end_at' => $event['end'],
                 'event_request_id' => $eventRequest->id,
+                'total_to_pay' => $price + $taxesAmount,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
