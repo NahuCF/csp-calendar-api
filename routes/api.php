@@ -89,7 +89,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('countries/with-events', [CountryController::class, 'countriesWithEvents']);
 
-    Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::get('orders/{orderId}', [OrderController::class, 'show'])->name('orders.show');
     Route::put('orders/{order}/update-event/{event}', [OrderController::class, 'updateEvent'])->name('orders.update-event');
     Route::get('request-bookings', [RequestBookingController::class, 'index'])->name('request-booking.index');
     Route::post('request-bookings/{eventRequest}/confirm', [RequestBookingController::class, 'confirmRequest'])->name('request-booking.confirm-request');

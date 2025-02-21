@@ -2,18 +2,26 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Http\Resources\CalendarEventResource;
-use App\Http\Resources\OrderResource;
-use App\Models\CalendarEvent;
 use App\Models\EventRequest;
 use Illuminate\Http\Request;
+use App\Models\CalendarEvent;
 use Illuminate\Support\Carbon;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\OrderResource;
+use App\Http\Resources\CalendarEventResource;
 
 class OrderController extends Controller
 {
-    public function show(Request $request, EventRequest $order)
+    public function show(Request $request, $orderId)
     {
+        $auth = Auth::user();
+
+        $order = EventRequest::query()
+            ->where('request_id', $orderId)
+            ->where('tenant_id', $auth->tenant_id)
+            ->first();
+
         $order->load(['details' => function ($query) {
             $query->orderBy('start_at');
         }, 'details.resource', 'sport']);
