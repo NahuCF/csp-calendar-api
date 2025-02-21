@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
+use App\Http\Resources\CalendarEventResource;
+use App\Http\Resources\OrderResource;
+use App\Models\CalendarEvent;
 use App\Models\EventRequest;
 use Illuminate\Http\Request;
-use App\Models\CalendarEvent;
 use Illuminate\Support\Carbon;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Resources\OrderResource;
-use App\Http\Resources\CalendarEventResource;
 
 class OrderController extends Controller
 {
@@ -24,7 +24,7 @@ class OrderController extends Controller
 
         $order->load(['details' => function ($query) {
             $query->orderBy('start_at');
-        }, 'details.resource', 'sport']);
+        }, 'details.resource', 'sport', 'client']);
 
         // Assign sequential numbers to the sorted details
         $order->details->each(function ($detail, $index) {
@@ -37,7 +37,7 @@ class OrderController extends Controller
                 'discount_amount' => $order->discount_amount,
                 'tax_amount' => $order->tax_amount,
                 'total_to_pay' => $order->total_to_pay,
-                'amount_paid' => 0,
+                'amount_paid' => number_format(0, 2),
                 'amount_due' => $order->total_to_pay,
             ],
         ]);

@@ -11,6 +11,7 @@ use App\Models\Sport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class InvoiceController extends Controller
 {
@@ -59,6 +60,17 @@ class InvoiceController extends Controller
 
         $tenantId = data_get($input, 'tenant_id');
         $orderId = data_get($input, 'order_id');
+
+        $order = EventRequest::query()
+            ->where('id', $orderId)
+            ->where('tenant_id', $tenantId)
+            ->first();
+
+        if (! $order) {
+            throw ValidationException::withMessages([
+                'order' => ['Order not found'],
+            ]);
+        }
 
         $calendarEvents = CalendarEvent::query()
             ->where('tenant_id', $tenantId)
