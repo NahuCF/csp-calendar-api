@@ -102,7 +102,7 @@ class InvoiceController extends Controller
                 'position' => $position++,
                 'date' => $start->format('l, F j Y'),
                 'resource_name' => $calendarResources->get($calendarEvent->calendar_resource_id)->name,
-                'total_to_pay' => $calendarEvent->total_to_pay,
+                'total_to_pay' => $calendarEvent->price,
                 'discount_amount' => $calendarEvent->discount_amount,
                 'sport_name' => $sport->name,
                 'times' => $start->format('g:i A').'-'.$end->format('g:i A'),
@@ -111,13 +111,15 @@ class InvoiceController extends Controller
             ];
         });
 
+        $amountPaid = 0;
+
         $dataTotals = [
-            'total_price' => $calendarEvents->sum('price'),
-            'total_discount' => $calendarEvents->sum('discount_amount'),
-            'total_tax' => $calendarEvents->sum('taxes_amount'),
-            'total_price_after_taxes' => $calendarEvents->sum('total_to_pay'),
-            'amount_paid' => 0, // TODO CHANGE
-            'amount_due' => $calendarEvents->sum('total_to_pay'), // TODO CHANGE
+            'total_price' => $order->price,
+            'total_discount' => $order->discount_amount,
+            'total_tax' => $order->tax_amount,
+            'total_price_after_taxes' => $order->total_to_pay,
+            'amount_paid' => $amountPaid, // TODO CHANGE
+            'amount_due' => $order->total_to_pay - $amountPaid, // TODO CHANGE
         ];
 
         $pdf = Pdf::loadView('pdf.invoice', [

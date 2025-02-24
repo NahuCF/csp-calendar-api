@@ -78,6 +78,12 @@ class RequestBookingController extends Controller
             ]);
         }
 
+        $resources = CalendarResource::query()
+            ->where('tenant_id', $tenant->id)
+            ->whereIn('id', collect($events)->pluck('resource_id'))
+            ->get()
+            ->keyBy('id');
+
         $resource = CalendarResource::query()
             ->where('tenant_id', $tenant->id)
             ->where('id', $resourceId)
@@ -95,19 +101,19 @@ class RequestBookingController extends Controller
             ->keyBy('id');
 
         // Price without taxes
-        $price = collect($events)->map(function ($event) use ($resource) {
+        $price = collect($events)->map(function ($event) use ($resources) {
             return $this->calculateRequestEventPrice(
                 $event['start'],
                 $event['end'],
-                $resource->price,
+                $resources->get($event['resource_id'])->price
             );
         })->sum();
 
-        $taxAmount = collect($events)->map(function ($event) use ($resource, $facilitiesById) {
+        $taxAmount = collect($events)->map(function ($event) use ($resources, $facilitiesById) {
             return ($this->calculateRequestEventPrice(
                 $event['start'],
                 $event['end'],
-                $resource->price,
+                $resources->get($event['resource_id'])->price
             ) * $facilitiesById->get($event['facility_id'])->tax_percentage) / 100;
         })->sum();
 
@@ -139,7 +145,7 @@ class RequestBookingController extends Controller
             $price = $this->calculateRequestEventPrice(
                 $event['start'],
                 $event['end'],
-                $resource->price
+                $resources->get($event['resource_id'])->price
             );
 
             $taxesAmount = ($price * $facilitiesById->get($event['facility_id'])->tax_percentage) / 100;

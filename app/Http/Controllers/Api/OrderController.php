@@ -7,6 +7,7 @@ use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\OrderResource;
 use App\Models\CalendarEvent;
 use App\Models\EventRequest;
+use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -43,6 +44,19 @@ class OrderController extends Controller
         ]);
     }
 
+    public function updateNote(Request $request, EventRequest $order)
+    {
+        $input = $request->validate([
+            'note' => ['sometimes'],
+        ]);
+
+        $order->update([
+            'note' => data_get($input, 'note'),
+        ]);
+
+        return OrderResource::make($order);
+    }
+
     public function updateEvent(Request $request, EventRequest $order, CalendarEvent $event)
     {
         $input = $request->validate([
@@ -50,6 +64,7 @@ class OrderController extends Controller
             'start_time' => ['required'],
             'end_time' => ['required'],
             'price' => ['required'],
+            'discount_amount' => ['required'],
             'start_at_date' => ['required'],
         ]);
 
@@ -58,6 +73,7 @@ class OrderController extends Controller
         $endTime = data_get($input, 'end_time');
         $price = data_get($input, 'price');
         $startAtDate = data_get($input, 'start_at_date');
+        $discountAmount = data_get($input, 'discount_amount');
 
         $event->update([
             'calendar_resource_id' => $calendarResourceId,
@@ -65,6 +81,7 @@ class OrderController extends Controller
             'end_at' => Carbon::parse($startAtDate.' '.$endTime)->format('Y-m-d H:i:s'),
             'price' => $price,
             'total_to_pay' => $price + $event->taxes_amount - $event->discount_amount,
+            'discount_amount' => $discountAmount,
         ]);
 
         $orderDetails = CalendarEvent::query()
@@ -81,8 +98,58 @@ class OrderController extends Controller
                 'total_to_pay' => $priceTotalOrder,
             ]);
 
+        (new OrderService)->updateOrderBalances($event->event_request_id);
+
         return CalendarEventResource::make($event)->additional([
             'total' => number_format($priceOrder, 2),
         ]);
+    }
+
+    public function confirm(Request $request, EventRequest $order)
+    {
+        if ($order->confirmed === true) {
+            return response()->json('', 200);
+        }
+
+        $user = Auth::user();
+
+        $order->update([
+            'confirmed' => true,
+            'rejected' => false,
+        ]);
+
+        CalendarEvent::query()
+            ->where('tenant_id', $user->tenant_id)
+            ->where('event_request_id', $order->id)
+            ->update([
+                'confirmed' => true,
+                'rejected' => false,
+            ]);
+
+        return response()->json('', 200);
+    }
+
+    public function cancel(Request $request, EventRequest $order)
+    {
+        if ($order->rejected === true) {
+            return response()->json('', 200);
+        }
+
+        $user = Auth::user();
+
+        $order->update([
+            'rejected' => true,
+            'confirmed' => false,
+        ]);
+
+        CalendarEvent::query()
+            ->where('tenant_id', $user->tenant_id)
+            ->where('event_request_id', $order->id)
+            ->update([
+                'confirmed' => false,
+                'rejected' => true,
+            ]);
+
+        return response()->json('', 200);
     }
 }

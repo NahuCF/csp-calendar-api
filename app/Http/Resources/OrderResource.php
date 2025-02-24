@@ -23,6 +23,7 @@ class OrderResource extends JsonResource
             'total_to_pay' => $this->total_to_pay,
             'tax_amount' => $this->tax_amount,
             'confirmed' => $this->confirmed,
+            'note' => $this->note,
             'client' => ClientResource::make($this->whenLoaded('client')),
             'details' => EventRequestDetailResource::collection($this->whenLoaded('details')),
             'sport' => SportResource::make($this->whenLoaded('sport')),

@@ -21,6 +21,7 @@ class EventRequestResource extends JsonResource
             'discount_amount' => $this->discount_amount,
             'price_with_taxes' => $this->price_with_taxes,
             'total_to_pay' => $this->total_to_pay,
+            'note' => $this->note,
             'tax_amount' => $this->tax_amount,
             'confirmed' => $this->confirmed,
             'client' => ClientResource::make($this->whenLoaded('client')),

@@ -20,6 +20,7 @@ class EventRequestDetailResource extends JsonResource
             'number' => $this->whenNotNull($this->number),
             'event_request_id' => $this->event_request_id,
             'price' => $this->price,
+            'discount_amount' => $this->discount_amount,
             'start_at_date' => Carbon::parse($this->start_at)->format('m/d/Y'),
             'start_at' => $this->start_at,
             'end_at' => $this->end_at,
